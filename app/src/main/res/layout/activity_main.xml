@@ -1,0 +1,65 @@
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ccc"
+    tools:context=".MainActivity"
+    android:id="@+id/activity_main">
+
+    <!-- <com.wakehao.bar.BottomNavigationBar
+        android
+        app:switchMode="shift"
+        app:menu="@menu/menu"
+        app:selectedColor="@color/bottom_nav_selected"
+        app:unSelectedColor="#999999"
+        app:fragmentContainerId="@id/fragment_container"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="56dp">
+    </com.wakehao.bar.BottomNavigationBar>-->
+    <com.wakehao.bar.BottomNavigationBar
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:id="@+id/bar"
+        android:layout_gravity="bottom"
+        android:layout_alignParentBottom="true"
+        app:fragmentContainerId="@id/fragment_container"
+        app:viewpagerId="@id/view_pager"
+        app:switchMode="shift"
+        app:menu="@menu/view_pager_menu"
+        app:selectedColor="@color/bottom_nav_selected"
+
+        >
+
+    </com.wakehao.bar.BottomNavigationBar>
+    <android.support.v4.view.ViewPager
+        android:id="@+id/view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+    </android.support.v4.view.ViewPager>
+
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="490dp"
+
+        android:layout_alignParentStart="true">
+
+    </FrameLayout>
+
+
+    <!--ment
+        android:id="@+id/client_fragment"
+        android:name="thefirstchange.example.com.communicationtext.fragment.ClientFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />-->
+    <byc.imagewatcher.ImageWatcher
+        android:id="@+id/image_watcher"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </byc.imagewatcher.ImageWatcher>
+</RelativeLayout>

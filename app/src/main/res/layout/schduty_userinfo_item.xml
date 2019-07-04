@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    android:orientation="vertical"
+    android:layout_marginLeft="15dp"
+    android:layout_marginRight="15dp"
+    android:layout_marginTop="@dimen/dimens_10px"
+    android:background="@drawable/item_shape"
+    android:id="@+id/schduty_userinfo_layout">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="20dp">
+        <TextView
+            android:id="@+id/schduty_user_account"
+            android:layout_width="0dp"
+            android:layout_weight="7"
+            android:text="121321321365456"
+            android:textColor="@color/black"
+            android:layout_height="20dp" />
+        <TextView
+            android:gravity="right"
+            android:id="@+id/schduty_userinfo_pos"
+            android:layout_width="0dp"
+            android:layout_weight="3"
+            android:text="121321321365456"
+            android:textColor="@color/black"
+            android:layout_height="20dp" />
+    </LinearLayout>
+
+
+
+    <LinearLayout
+        android:layout_marginTop="10dp"
+        android:paddingLeft="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/schduty_userinfo_name"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:layout_weight="2"
+            android:textSize="18sp"
+            android:text="123123146"
+            android:textColor="@color/black"/>
+        <TextView
+
+            android:id="@+id/schduty_userinfo_corppart"
+            android:layout_width="0dp"
+            android:text="145484dsad"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:layout_weight="1"
+            android:textSize="18sp"
+            android:textColor="@color/black"/>
+    </LinearLayout>
+
+    <!--<LinearLayout-->
+        <!--android:layout_marginTop="10dp"-->
+        <!--android:paddingLeft="16dp"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:orientation="horizontal">-->
+
+        <!--<TextView-->
+            <!--android:id="@+id/schduty_userinfo_ph"-->
+            <!--android:layout_width="0dp"-->
+            <!--android:layout_height="match_parent"-->
+            <!--android:gravity="center_vertical"-->
+            <!--android:layout_weight="2"-->
+            <!--android:text="464646"-->
+            <!--android:textSize="18sp"-->
+            <!--android:textColor="@color/black"/>-->
+        <!--<TextView-->
+
+            <!--android:id="@+id/schduty_userinfo_pos"-->
+            <!--android:layout_width="0dp"-->
+            <!--android:text="1125454545"-->
+            <!--android:layout_height="match_parent"-->
+            <!--android:gravity="center_vertical"-->
+            <!--android:layout_weight="1"-->
+            <!--android:textSize="18sp"-->
+            <!--android:textColor="@color/black"/>-->
+    <!--</LinearLayout>-->
+
+
+</LinearLayout>

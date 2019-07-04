@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="@color/tecent_color">
+
+
+    <RelativeLayout
+        android:background="@color/DeepSkyBlue1"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:orientation="horizontal"
+
+       >
+
+        <ImageView
+            android:id="@+id/createcorcornameback_tv"
+            android:layout_width="30dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="10dp"
+            android:src="@drawable/ic_back_gray"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:text="创建社团"
+            android:textSize="21sp"
+            android:textColor="@color/white"
+            />
+
+        <TextView
+            android:layout_marginRight="10dp"
+        android:id="@+id/createcorcornamenext_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:text="下一步"
+        android:textSize="18sp"
+            android:layout_alignParentRight="true"
+        />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
+        <LinearLayout
+            android:layout_marginLeft="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="90dp"
+                android:layout_height="40dp"
+                android:text="社团名称"
+                android:textSize="18sp"/>
+            <EditText
+                android:id="@+id/corname_et"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:hint="请输入社团的名称"
+                android:singleLine="true"
+                android:textColorHint="@color/beautifulbackground"
+                android:textColor="@color/black"
+                android:background="@null"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_marginLeft="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="90dp"
+                android:layout_height="40dp"
+                android:text="社团类型"
+                android:textSize="18sp"/>
+            <EditText
+                android:id="@+id/cortype_et"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:hint="请输入社团的类型"
+                android:singleLine="true"
+                android:textColorHint="@color/beautifulbackground"
+                android:textColor="@color/black"
+                android:background="@null"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/choose_year_createCorp_tv"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:paddingLeft="10dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:text="2018-2019 大三"
+            android:textSize="18sp"
+            android:gravity="center_vertical"
+            android:textColor="@color/MediumPurple"/>
+        <TextView
+            android:id="@+id/choose_xueqi_createCorp_tv"
+            android:layout_width="match_parent"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_height="40dp"
+            android:gravity="center_vertical"
+            android:paddingLeft="10dp"
+            android:textSize="18sp"
+            android:text="第2学期"
+            android:textColor="@color/MediumPurple"/>
+
+        <TextView
+            android:layout_marginTop="15dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:text="选择社团分部数量"
+            android:textSize="15sp"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="25dp" />
+
+        <com.shawnlin.numberpicker.NumberPicker
+            android:id="@+id/number_picker"
+            android:layout_width="match_parent"
+            android:layout_height="93dp"
+            android:layout_centerInParent="true"
+            app:np_dividerColor="@color/blue"
+            app:np_height="50dp"
+            app:np_max="20"
+            app:np_min="0"
+            app:np_orientation="horizontal"
+            app:np_scrollerEnabled="true"
+            app:np_selectedTextColor="@color/tencent_blue"
+            app:np_selectedTextSize="55sp"
+            app:np_textColor="@color/blue"
+            app:np_textSize="50sp"
+            app:np_value="1"
+            app:np_wheelItemCount="3"
+            app:np_width="64dp"
+            app:np_wrapSelectorWheel="false" />
+        <EditText
+            android:id="@+id/corinfo_et"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="30dp"
+            android:background="@drawable/edittextcorner"
+            android:gravity="top"
+            android:hint="请输入社团介绍"
+            android:maxLength="500"
+            android:minLines="20"
+            android:scrollbars="vertical"
+            android:singleLine="false"
+            android:textColor="@color/black"
+            android:textColorHint="@color/beautifulbackground" />
+
+    </LinearLayout>
+
+
+
+
+</LinearLayout>

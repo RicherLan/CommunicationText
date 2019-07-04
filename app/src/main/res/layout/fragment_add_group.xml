@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="10dp"
+    android:background="@color/tecent_color">
+    <LinearLayout
+
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <LinearLayout
+            android:background="@color/white"
+            android:id="@+id/find_group_lay"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal">
+            <EditText
+                android:id="@+id/group_number_edit"
+                android:paddingLeft="15dp"
+                android:hint="群号码"
+                android:background="@color/white"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="6">
+            </EditText>
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_height="35dp"
+                android:layout_weight="2"
+                android:visibility="gone"
+                android:src="@drawable/ic_clear_edit"/>
+            <TextView
+                android:id="@+id/find_group_text"
+                android:layout_width="70dp"
+                android:layout_marginRight="@dimen/dimens_10px"
+                android:layout_marginLeft="@dimen/dimens_10px"
+                android:layout_height="40dp"
+                android:background="@drawable/shape"
+                android:text="查询"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:gravity="center"/>
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_marginTop="10dp"
+            android:background="@color/white"
+            android:id="@+id/finded_group"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="90dp">
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <LinearLayout
+                    android:layout_marginLeft="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/add_group_iv"
+                        android:layout_width="70dp"
+                        android:layout_height="70dp"
+                        android:src="@drawable/user_image1"/>
+                    <RelativeLayout
+                        android:layout_marginLeft="15dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent">
+                        <TextView
+                            android:id="@+id/add_group_name"
+                            android:layout_marginTop="16dp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="25dp"
+                            android:textColor="@color/black"
+                            android:textSize="20sp"/>
+                        <TextView
+
+                            android:id="@+id/add_group_number"
+                            android:layout_width="wrap_content"
+                            android:layout_height="23dp"
+                            android:textColor="@color/gray"
+                            android:textSize="17sp"
+                            android:layout_alignParentBottom="true"
+                            android:layout_marginBottom="15dp"/>
+                    </RelativeLayout>
+                </LinearLayout>
+
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/add_this_group"
+                android:layout_marginRight="15dp"
+                android:layout_centerVertical="true"
+                android:layout_width="60dp"
+                android:layout_height="35dp"
+                android:layout_alignParentRight="true"
+                android:text="添加"
+                android:textSize="17sp"
+                android:gravity="center"
+                android:textColor="@color/white"
+                android:background="@drawable/alter_button_radius" />
+            <TextView
+                android:visibility="gone"
+                android:id="@+id/group_had_friend"
+                android:layout_width="60dp"
+                android:layout_height="35dp"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="15dp"
+                android:gravity="center"
+                android:text="已添加"
+                android:textColor="@color/gray"
+                android:textSize="17sp" />
+
+        </RelativeLayout>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.1dp"
+            android:background="@color/tecent_color"></View>
+
+        <RelativeLayout
+            android:visibility="gone"
+            android:layout_marginTop="5dp"
+            android:id="@+id/group_send_add_info_lay"
+            android:layout_width="match_parent"
+            android:layout_height="220dp">
+
+            <EditText
+                android:id="@+id/group_check_info"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:background="@color/white"
+                android:gravity="start"
+                android:hint="在这里填写验证信息！"
+                android:textSize="18sp"
+                android:maxLength="30"/>
+            <View
+                android:layout_below="@id/check_info"
+                android:layout_width="match_parent"
+                android:layout_height="0.1dp"
+                android:background="@color/tecent_color"/>
+
+            <TextView
+                android:id="@+id/group_send_add_info"
+                android:layout_width="350dp"
+                android:layout_height="40dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:background="@drawable/alter_button_radius"
+                android:gravity="center"
+                android:text="发送"
+                android:textColor="@color/white"
+                android:textSize="17sp" />
+
+        </RelativeLayout>
+
+
+
+    </LinearLayout>
+
+</RelativeLayout>

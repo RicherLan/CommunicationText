@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white"
+    android:id="@+id/registerschoolinfo_linelayout">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:orientation="horizontal"
+        android:background="@color/DeepSkyBlue1"
+
+        >
+
+        <ImageView
+            android:id="@+id/registerschoolnameback_tv"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:paddingTop="5dp"
+
+            android:src="@drawable/ic_back_gray"
+            />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="4"
+            android:gravity="center"
+            android:text="校园信息"
+            android:textSize="21sp"
+            android:textColor="@color/white"
+            android:layout_marginRight="10dp"
+            />
+        <TextView
+            android:id="@+id/registerschoolinfonext_tv"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Next"
+            android:textSize="18sp"
+            android:textColor="@color/white"
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:orientation="vertical"
+        android:background="@color/beautifulbackground"
+       >
+
+        <thefirstchange.example.com.communicationtext.usersignin.MyCompleteTextView
+
+            android:id="@+id/registerschoollname_et"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="10dp"
+            android:hint="请输入学校的名字或拼音缩写"
+            android:singleLine="true"
+            android:textColorHint="@color/beautifulbackground"
+            android:textColor="@color/Seashell4"
+            android:background="@drawable/edittextcorner"
+            android:paddingLeft="5dp"/>
+
+
+        <EditText
+            android:id="@+id/registercollege_et"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="10dp"
+            android:hint="请输入所在院系"
+            android:singleLine="true"
+            android:textColorHint="@color/beautifulbackground"
+            android:textColor="@color/Seashell4"
+            android:background="@drawable/edittextcorner"
+            android:paddingLeft="5dp"/>
+
+
+        <EditText
+            android:id="@+id/registermajor_et"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="10dp"
+            android:hint="请输入所修专业"
+            android:singleLine="true"
+            android:textColorHint="@color/beautifulbackground"
+            android:textColor="@color/Seashell4"
+            android:background="@drawable/edittextcorner"
+            android:paddingLeft="5dp"/>
+
+
+    </LinearLayout>
+
+
+</LinearLayout>

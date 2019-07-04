@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/shape_dialog">
+    <TextView
+        android:layout_marginTop="5dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:textColor="@color/black"
+        android:text="添加群聊"
+        android:gravity="center"
+        android:textSize="17sp"
+        android:id="@+id/to_add_group"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.1dp"
+        android:background="@color/tecent_color"/>
+    <TextView
+        android:background="?android:attr/selectableItemBackground"
+        android:id="@+id/to_create_group"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:textColor="@color/black"
+        android:text="创建群聊"
+        android:gravity="center"
+        android:textSize="17sp"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.1dp"
+        android:background="@color/tecent_color"/>
+    <TextView
+        android:layout_marginBottom="5dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:id="@+id/cancel_add_group"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:textSize="17sp"
+        android:gravity="center"
+        android:text="取消"
+        android:textColor="@color/red"/>
+</LinearLayout>

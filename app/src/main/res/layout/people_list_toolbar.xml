@@ -1,0 +1,18 @@
+<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/people_list_toolbar"
+    android:layout_height="45dp"
+    android:layout_width="match_parent"
+    android:background="@color/DeepSkyBlue1"
+    app:layout_scrollFlags="scroll|enterAlways|snap"
+    >
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/people_list_title"
+        android:text="组织成员"
+        android:layout_centerInParent="true"
+        android:layout_gravity="center"
+        android:textSize="21sp"
+        android:textColor="#fff"/>
+</android.support.v7.widget.Toolbar>

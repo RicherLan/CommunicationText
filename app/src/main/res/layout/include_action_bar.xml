@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<thefirstchange.example.com.communicationtext.widget.HeaderLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:background="@color/DeepSkyBlue1"
+    android:layout_height="@dimen/base_action_bar_height" >
+
+</thefirstchange.example.com.communicationtext.widget.HeaderLayout>
+

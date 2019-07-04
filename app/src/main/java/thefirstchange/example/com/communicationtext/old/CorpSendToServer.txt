@@ -1,0 +1,86 @@
+package thefirstchange.example.com.communicationtext.old;
+
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import thefirstchange.example.com.communicationtext.gson.PersonalInfo;
+import thefirstchange.example.com.communicationtext.netty.NettyClient;
+import thefirstchange.example.com.communicationtext.service.ObjectService;
+
+public class CorpSendToServer {
+
+
+    //添加社团组织的某一个部门
+    public static void addCorpPart(int groupid,String name){
+
+        String json = "{\"ph\":\""+ ObjectService.personalInfo.getPhonenumber()+"\",\"gid\":\""+groupid+"\",\"name\":\""+name+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","addCorpPart","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+//                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+//                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //删除社团组织的某一个部门
+    public static void deleteCorpPart(int groupid,String name){
+
+        String json = "{\"ph\":\""+ ObjectService.personalInfo.getPhonenumber()+"\",\"gid\":\""+groupid+"\",\"name\":\""+name+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","deleteCorpPart","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+//                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+//                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //修改社团组织的某一个部门的名字
+    public static void alterCorpPart(int groupid,String oldname,String newname){
+
+        String json = "{\"ph\":\""+ ObjectService.personalInfo.getPhonenumber()+"\",\"gid\":\""+groupid+"\",\"oldname\":\""+oldname+"\",\"newname\":\""+newname+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","alterCorpPart","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+//                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+//                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //修改自己在社团的职位
+    public static void alterCorpPos(int groupid,String newname){
+
+        String json = "{\"ph\":\""+ ObjectService.personalInfo.getPhonenumber()+"\",\"gid\":\""+groupid+"\",\"newname\":\""+newname+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","alterCorpPos","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+//                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+//                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+}

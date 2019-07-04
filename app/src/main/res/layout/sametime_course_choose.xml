@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:gravity="center_horizontal">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="120dp"
+            android:orientation="horizontal">
+            <RelativeLayout
+                android:background="#36c148"
+                android:layout_width="150dp"
+                android:layout_height="150dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
+                    <TextView
+                        android:gravity="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:text="本周"
+                        android:textSize="18sp"
+                        android:textColor="@color/white"/>
+                    <TextView
+                        android:layout_marginTop="10dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"
+                        android:text="名称"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:gravity="center"/>
+                    <TextView
+                        android:layout_marginTop="10dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"
+                        android:text="地点"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:gravity="center"/>
+
+                </LinearLayout>
+
+            </RelativeLayout>
+            <RelativeLayout
+                android:layout_marginLeft="20dp"
+                android:background="#3899b4"
+                android:layout_width="150dp"
+                android:layout_height="150dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
+                    <TextView
+                        android:gravity="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:text="本周"
+                        android:textSize="18sp"
+                        android:textColor="@color/white"/>
+                    <TextView
+                        android:layout_marginTop="10dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"
+                        android:text="名称"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:gravity="center"/>
+                    <TextView
+                        android:layout_marginTop="10dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"
+                        android:text="地点"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:gravity="center"/>
+
+                </LinearLayout>
+
+            </RelativeLayout>
+            
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</RelativeLayout>

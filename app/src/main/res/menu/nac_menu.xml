@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="none">
+        <item
+            android:id="@+id/nav_call"
+            android:title="电话：15254150050"/>
+        <item
+            android:id="@+id/nav_part"
+            android:title="部室：网络部"/>
+        <item
+            android:id="@+id/nav_job"
+            android:title="职务：部长"/>
+        <item
+            android:id="@+id/person_safe"
+            android:title="密码与安全"/>
+    </group>
+    <item
+        android:id="@+id/update_information"
+        android:title="查看个人资料"/>
+    <item
+        android:id="@+id/show_work_information"
+        android:title="查看消息通知"/>
+    <item
+        android:id="@+id/out_nav"
+        android:title="退出账号"/>
+
+
+</menu>

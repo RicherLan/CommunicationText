@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/beautifulbackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:background="@color/DeepSkyBlue1"
+        >
+
+        <ImageView
+            android:id="@+id/registercaptchaback_tv"
+            android:layout_width="35dp"
+            android:layout_height="match_parent"
+            android:paddingTop="5dp"
+            android:src="@drawable/ic_back_gray"/>
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="4"
+            android:gravity="center"
+            android:text="短信验证"
+            android:textSize="20sp"
+            android:textColor="@color/white"
+            />
+        <TextView
+            android:id="@+id/submitReg_tv"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="提交"
+            android:textSize="18sp"
+            android:textColor="@color/white"
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_marginTop="@dimen/dimens_14px"
+        android:layout_width="match_parent"
+        android:layout_height="85dp"
+        android:orientation="vertical"
+        android:background="@color/beautifulbackground">
+
+        <TextView
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:text="手机短信验证"
+            android:textColor="@color/Seashell4"
+            android:gravity="center"/>
+
+        <TextView
+            android:id="@+id/phone_tv"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="15318833807"
+            android:textSize="22sp"
+            android:textColor="@color/DeepSkyBlue1"
+            android:gravity="center" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_marginTop="6dp"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:background="@color/beautifulbackground">
+
+       <EditText
+           android:id="@+id/registercaptcha_et"
+           android:paddingLeft="3dp"
+           android:layout_width="0dp"
+           android:layout_height="match_parent"
+           android:layout_weight="5"
+           android:drawableLeft="@drawable/captcha"
+           android:drawablePadding="5dp"
+           android:hint="请输入短信验证码"
+           android:singleLine="true"
+           android:textColorHint="@color/beautifulbackground"
+           android:textColor="@color/Seashell4"
+           android:textCursorDrawable="@drawable/shape_et_cursor_color"
+           android:background="@drawable/edittextcorner"
+           />
+
+        <TextView
+            android:id="@+id/registercaptchachongfa_et"
+            android:layout_width="80dp"
+            android:layout_marginLeft="@dimen/dimens_10px"
+            android:layout_height="@dimen/dimens_45px"
+            android:textColor="@color/white"
+            android:background="@drawable/shape"
+            android:gravity="center"
+            android:text="短信获取"/>
+
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_marginTop="40dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <ImageView
+            android:id="@+id/imagecode_iv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:src="@drawable/ic_launcher_background"
+            android:layout_gravity="center_horizontal"
+            />
+        <EditText
+            android:id="@+id/imagecode_et"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="50dp"
+            android:layout_marginRight="50dp"
+            android:hint="输入图片验证码"
+            android:gravity="center"/>
+        <Button
+            android:id="@+id/get_imagecode_bt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="获得图片验证码"
+            android:textColor="@color/white"
+            android:background="@drawable/shape"
+            android:layout_gravity="center_horizontal"/>
+    </LinearLayout>
+
+
+
+</LinearLayout>

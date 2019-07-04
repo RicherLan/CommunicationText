@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white">
+    <RelativeLayout
+        android:background="@color/DeepSkyBlue1"
+        android:layout_width="match_parent"
+        android:layout_height="42dp">
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="10dp"
+            android:id="@+id/finish_alter_friend_name"
+            android:src="@drawable/ic_back_gray"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:text="修改备注"
+            android:textColor="@color/white"
+            android:textSize="21sp"
+            android:layout_centerHorizontal="true"/>
+    </RelativeLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:background="@color/viewcolor"/>
+    <View
+        android:layout_marginTop="15dp"
+        android:layout_width="match_parent"
+        android:layout_height="0.1dp"
+        android:background="@color/viewcolor"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_marginLeft="15dp"
+            android:gravity="center_vertical"
+            android:textSize="18sp"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:text="备注名"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/write_new_name"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:background="@color/white"
+            android:maxLines="1"
+            android:maxLength="10"
+            android:hint="填写备注"/>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.1dp"
+        android:background="@color/viewcolor"/>
+    <RelativeLayout
+        android:layout_marginTop="35dp"
+        android:layout_width="match_parent"
+        android:layout_height="40dp">
+        <TextView
+            android:id="@+id/save_new_name"
+            android:layout_width="350dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/shape_button"
+            android:text="点击保存"
+            android:textColor="@color/white"
+            android:textSize="17sp"
+            android:gravity="center"
+            android:layout_centerHorizontal="true"/>
+
+    </RelativeLayout>
+
+    
+
+</LinearLayout>

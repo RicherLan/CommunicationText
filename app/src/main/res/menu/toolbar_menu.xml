@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <!--<item-->
+        <!--android:id="@+id/to_friend_list"-->
+        <!--android:icon="@drawable/to_friend_list"-->
+        <!--android:title="ToFriendList"-->
+        <!--app:showAsAction="always"/>-->
+    <!--<item-->
+        <!--android:id="@+id/serach_history_msg"-->
+        <!--android:title="SerachHistortyMsg"-->
+        <!--app:showAsAction="always"-->
+        <!--android:icon="@drawable/serach_history_msg"/>-->
+
+
+</menu>

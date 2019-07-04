@@ -1,0 +1,68 @@
+
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <RelativeLayout
+            android:background="@color/DeepSkyBlue1"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dimens_45px">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/finish_appoint_ganshi_iv"
+                android:src="@drawable/ic_back_gray"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="10dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="21sp"
+                android:textColor="@color/white"
+                android:text="任命干事"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="10dp"/>
+        </RelativeLayout>
+
+        <EditText
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:id="@+id/appoint_ganshi_search_people_et"
+            android:layout_width="match_parent"
+            android:layout_height="37dp"
+            android:drawableLeft="@drawable/ic_search_black_24dp"
+            android:drawablePadding="5dp"
+            android:hint="搜索成员"
+            android:textCursorDrawable="@drawable/shape_et_cursor_color"
+            android:singleLine="true"
+            android:textColorHint="@color/beautifulbackground"
+            android:textColor="@color/Seashell4"
+            android:background="@drawable/edittextcorner"
+            />
+
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="5sp"
+            android:background="@color/colorAccent" />
+
+
+        <android.support.v7.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/appoint_ganshi_allpeople_recycleview">
+        </android.support.v7.widget.RecyclerView>
+
+    </LinearLayout>
+</RelativeLayout>

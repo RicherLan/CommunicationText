@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/mainlayout">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:orientation="horizontal"
+            android:background="@color/DeepSkyBlue1">
+            <TextView
+                android:id="@+id/css_schduty"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="返回"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:gravity="center"/>
+            <LinearLayout
+                android:layout_marginTop="4dp"
+                android:id="@+id/zhou_layout"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="5"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/zhou_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="17sp"
+                    android:gravity="center"/>
+                <TextView
+                    android:id="@+id/xueqi_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="17sp"
+                    android:gravity="center"/>
+
+            </LinearLayout>
+
+
+            <TextView
+                android:id="@+id/import_edu_tv"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="戳我"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:gravity="center"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="@color/white">
+
+            <android.support.v7.widget.RecyclerView
+
+                android:visibility="gone"
+                android:id="@+id/zhoushu_listview"
+                android:layout_width="match_parent"
+                android:layout_height="65dp"
+                android:background="@color/FloralWhite">
+
+            </android.support.v7.widget.RecyclerView>
+
+            <!--课程表界面-->
+            <LinearLayout
+                android:id="@+id/course_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <GridLayout
+                    android:id="@+id/main_grid_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:background="@color/WhiteSmoke"
+                    android:rowCount="1"
+                    android:columnCount="15">
+                </GridLayout>
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:scrollbars="none">
+                    <GridLayout
+                        android:id="@+id/main_grid_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/white"
+                        android:rowCount="30"
+                        android:columnCount="16">
+                    </GridLayout>
+                </ScrollView>
+
+            </LinearLayout>
+
+
+
+            <!--成绩界面-->
+            <LinearLayout
+                android:id="@+id/score_layout"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:background="@color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:paddingLeft="10dp"
+                        android:gravity="center_vertical"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="9"
+                        android:text="课程"
+                        android:textSize="19sp"
+                        android:textColor="@color/HotPink"/>
+                    <TextView
+                        android:gravity="center"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="2"
+                        android:text="分数"
+                        android:textSize="19sp"
+                        android:textColor="@color/HotPink"/>
+                    <TextView
+                        android:gravity="center"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="2"
+                        android:text="学分"
+                        android:textSize="19sp"
+                        android:textColor="@color/HotPink"/>
+                </LinearLayout>
+
+                <ListView
+                    android:id="@+id/score_listview"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:divider="@android:color/transparent"
+                    android:dividerHeight="10dp">
+                </ListView>
+            </LinearLayout>
+        </LinearLayout>
+
+
+
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_alignParentBottom="true"
+
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:orientation="horizontal"
+        android:background="@color/WhiteSmoke">
+
+        <LinearLayout
+
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingBottom="7dp">
+
+            <ImageView
+                android:id="@+id/courseimageview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/course_press"/>
+
+            <TextView
+                android:id="@+id/coursetextview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="课程表"
+                android:textColor="@color/DeepSkyBlue1"/>
+
+        </LinearLayout>
+
+
+        <LinearLayout
+
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingBottom="7dp">
+
+            <ImageView
+                android:id="@+id/scoreimageview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/score_normal"/>
+
+            <TextView
+                android:id="@+id/scoretextview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="查成绩"
+                android:textColor="@color/grey31"/>
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+
+
+</RelativeLayout>

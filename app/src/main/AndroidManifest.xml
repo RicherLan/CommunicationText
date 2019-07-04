@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="thefirstchange.example.com.communicationtext">
+
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.BROADCAST_STICKY" />
+    <!-- <uses-permission android:name="android.permission.WRITE_SETTINGS" /> -->
+    <!-- 来电消音 -->
+    <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- weizhi -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" /> -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+
+    <application
+
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_icone"
+        android:label="刚下课"
+        android:roundIcon="@mipmap/ic_icone"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        tools:replace="android:label">
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
+
+        <!-- <service -->
+        <!-- android:name="com.baidu.location.f" -->
+        <!-- android:enabled="true" -->
+        <!-- android:process=":remote" /> -->
+
+        <meta-data
+            android:name="com.baidu.lbsapi.API_KEY"
+            android:value="lLqnvDoc9yWyLOyVaWatqCBt6CsKBoGb" />
+
+
+        <activity android:name=".WelcomeActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/ThemeSplash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".login.LoginActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/loginTheme"
+            android:windowSoftInputMode="stateAlwaysHidden"/>
+
+        <activity
+            android:name=".MainActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".usersignin.RegisterCaptchaActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".usersignin.RegisterPhonenumberActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".usersignin.RegisterSchoolInfoActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".group.AllPeopleShowActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.PeopleDeatilActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".course.supercouesrdemo2.ScheduleArrangementActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+
+        <activity
+            android:name=".corpration.appointPos.AppointPosActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+
+        <activity
+            android:name=".corpration.appointPos.AppointZhuXiActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"
+            android:windowSoftInputMode="stateAlwaysHidden"/>
+        <activity
+            android:name=".corpration.appointPos.AppointBuZhangActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"
+            android:windowSoftInputMode="stateAlwaysHidden"/>
+        <activity
+            android:name=".corpration.appointPos.AppointGanShiActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"
+            android:windowSoftInputMode="stateAlwaysHidden"/>
+
+        <activity
+            android:name=".corpration.appointPos.AppointBuZhangSelectPartActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"
+            android:windowSoftInputMode="stateAlwaysHidden"/>
+
+        <activity
+            android:name=".course.supercouesrdemo2.SearchEmptyClassroomResultActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"
+            android:windowSoftInputMode="stateAlwaysHidden"/>
+
+
+
+
+
+        <service
+            android:name=".service.NotifyService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <service
+            android:name=".service.NettyService"
+            android:enabled="true"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="ITOP.MOBILE.SIMPLE.SERVICE.NETTYSERVICE"/>
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".service.NettyService$MainLookReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="thefirstchange.example.com.communicationtext.MAIN_LOOK" />
+            </intent-filter>
+        </receiver>
+
+        <activity android:name=".activity.myselfactivity.ForgetPassSetPassActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity android:name=".activity.myselfactivity.ForgetPasswordActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity android:name=".activity.myselfactivity.ForgetPassSubmitActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.ShowPersonalInfoActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".corpration.CorpHelpActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.myselfactivity.HelpServiceListActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".course.supercouesrdemo2.SchDutyActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.PersonalHomePageActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.ConnectOtherActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+
+        <activity android:name=".activity.ImageBrowserActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.ActivityBase"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.BaseActivityOne"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.LocationActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.EditLifeShowActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.PlusImageActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.ContactsActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.CommentShowActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.myselfactivity.PasswordAndSafeActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.BaseForCloseActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.myselfactivity.AlterPasswordActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".usersignin.SelectRuxueYearActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.CorporationCreateActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".corpration.CreateCorpResActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+
+
+
+        <!-- <receiver android:name=".login.LoginActivity$LoginReceiver" -->
+        <!-- android:enabled="true" -->
+        <!-- android:exported="true"> -->
+        <!-- <intent-filter> -->
+        <!-- <action android:name="thefirstchange.example.com.communicationtext.LOGIN_INFO"/> -->
+        <!-- </intent-filter> -->
+        <!-- </receiver> -->
+        <activity
+            android:name=".group.GroupListActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".group.GroupChatActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.myselfactivity.SoftSettingActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.FindFriendOrGroupActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.OtherPeopleApplicationActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.OtherApplicationDetailActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.myselfactivity.AlterHisNameActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.CreateGroupActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".group.GroupPageActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <!-- android:theme="@style/AppTheme.Personalinfo" /> -->
+        <activity
+            android:name=".activity.AlterGroupNameActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.AlterMyIvHeadActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.LifeShowNotificationActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.AlterGroupPartActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.SearchEmptyCourePeopleActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.UpdatePersonInfoActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".course.supercouesrdemo2.CSSActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".course.supercouesrdemo2.RequestKebiaoOrScoreActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".course.supercouesrdemo2.CourseDetailActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".course.supercouesrdemo2.SchDutyUserInfoActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.ShowMoreCommentActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".advice.AdviceActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.myselfactivity.AlterIP"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.DutyNotiRecyViewActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity
+            android:name=".activity.SearchEmptyCoursePeopleListActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo" />
+        <activity android:name=".activity.CreatePartActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"></activity>
+        <activity android:name=".course.supercouesrdemo2.CorpLoadCourseActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"></activity>
+        <activity android:name=".group.GroupArrangeActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"></activity>
+        <activity android:name=".corpration.AlterCorpTermActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"></activity>
+        <activity android:name=".activity.CheckCourseInputActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"></activity>
+        <activity android:name=".corpration.AddAlterCorpPartActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"></activity>
+        <activity android:name=".corpration.AlterCorpPosActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"></activity>
+        <activity android:name=".activity.MoreGroupInfoOne"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"></activity>
+        <activity android:name=".corpration.PartListOfCorprationActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"></activity>
+        <activity android:name=".course.supercouesrdemo2.SearchEmptyClassroomActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"></activity>
+
+        <activity android:name=".group.SearchGroupHomeActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Personalinfo"></activity>
+
+
+    </application>
+
+</manifest>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:background="@color/DeepSkyBlue1"
+        android:layout_height="58dp">
+        <ImageView
+            android:layout_marginLeft="10dp"
+            android:layout_width="35dp"
+            android:layout_height="match_parent"
+            android:id="@+id/finish_search_empty_course"
+            android:src="@drawable/ic_back_gray"/>
+        <LinearLayout
+            android:layout_marginTop="4dp"
+            android:id="@+id/search_empty_course_choose_zhou"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_centerHorizontal="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="空课查询"
+                android:textSize="20sp"
+                android:textColor="@color/white"/>
+            <TextView
+                android:id="@+id/search_empty_course_zhou_tv"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="第1周"
+                android:textSize="17sp"
+                android:textColor="@color/white"/>
+
+        </LinearLayout>
+        <TextView
+            android:id="@+id/search_empty_course_search"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="10dp"
+            android:gravity="center"
+            android:text="查询"
+            android:textSize="19sp"
+            android:textColor="@color/white"/>
+
+
+    </RelativeLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.1dp"
+        android:background="@color/tecent_color"/>
+
+    <android.support.v7.widget.RecyclerView
+
+        android:visibility="gone"
+        android:id="@+id/serarch_empty_course_zhoushu_listview"
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:background="@color/FloralWhite">
+
+    </android.support.v7.widget.RecyclerView>
+    <LinearLayout
+        android:id="@+id/schedulearrangement_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <GridLayout
+            android:id="@+id/schedulearrangement_grid_title"
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
+            android:background="@color/white"
+            android:rowCount="1"
+            android:columnCount="15">
+        </GridLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:scrollbars="none">
+            <GridLayout
+                android:id="@+id/schedulearrangement_grid_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:rowCount="24"
+                android:columnCount="16">
+            </GridLayout>
+        </ScrollView>
+
+    </LinearLayout>
+
+    <!--<RelativeLayout-->
+        <!--android:layout_marginTop="10dp"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="60dp"-->
+        <!--android:gravity="center">-->
+
+        <!--<LinearLayout-->
+            <!--android:layout_width="274dp"-->
+            <!--android:layout_height="match_parent"-->
+            <!--android:gravity="center_vertical">-->
+
+            <!--<TextView-->
+                <!--android:id="@+id/cleat_choose_text"-->
+                <!--android:layout_width="100dp"-->
+                <!--android:layout_height="40dp"-->
+                <!--android:background="@drawable/alter_button_radius"-->
+                <!--android:gravity="center"-->
+                <!--android:text="重选"-->
+                <!--android:textColor="@color/white"-->
+                <!--android:textSize="22sp" />-->
+
+            <!--<TextView-->
+                <!--android:id="@+id/submit_search_empty"-->
+                <!--android:layout_width="100dp"-->
+                <!--android:layout_height="40dp"-->
+                <!--android:layout_marginLeft="70dp"-->
+                <!--android:background="@drawable/alter_button_radius"-->
+                <!--android:gravity="center"-->
+                <!--android:text="查询"-->
+                <!--android:textColor="@color/white"-->
+                <!--android:textSize="22sp" />-->
+        <!--</LinearLayout>-->
+
+    <!--</RelativeLayout>-->
+
+</LinearLayout>

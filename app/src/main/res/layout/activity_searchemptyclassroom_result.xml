@@ -1,0 +1,96 @@
+
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <RelativeLayout
+            android:background="@color/DeepSkyBlue1"
+            android:layout_width="match_parent"
+            android:layout_height="50dp">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/emptyclassroom_back_iv"
+                android:src="@drawable/ic_back_gray"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="10dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="21sp"
+                android:textColor="@color/white"
+                android:text="查询结果"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="10dp"/>
+        </RelativeLayout>
+
+
+
+            <TextView
+                android:background="@color/beautifulbackground"
+                android:id="@+id/emptyclassroom_buildname"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:textSize="21sp"
+                android:layout_alignParentLeft="true"
+
+                android:gravity="center"
+                />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2sp"
+            android:background="@color/white" />
+
+        <TextView
+            android:background="@color/beautifulbackground"
+            android:id="@+id/emptyclassroom_weekandday"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:textSize="21sp"
+            android:layout_alignParentLeft="true"
+
+            android:gravity="center"
+            />
+
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2sp"
+            android:background="@color/white" />
+
+        <TextView
+            android:background="@color/beautifulbackground"
+            android:id="@+id/emptyclassroom_jieshu"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:textSize="21sp"
+            android:layout_alignParentLeft="true"
+
+            android:gravity="center"
+            />
+
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2sp"
+            android:background="@color/white" />
+
+        <android.support.v7.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/emptyclassroom_recycle_view">
+        </android.support.v7.widget.RecyclerView>
+        <!--</android.support.v4.widget.SwipeRefreshLayout>-->
+    </LinearLayout>
+</RelativeLayout>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_gravity="center"
+        android:id="@+id/one"
+        android:layout_marginTop="100dp"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:text="我是蓝伟华1号"
+        android:textColor="#00BFFF"/>
+
+    <TextView
+        android:layout_gravity="center"
+        android:id="@+id/two"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:text="我是蓝伟华2号"
+        android:textColor="#00BFFF"/>
+
+    <TextView
+        android:layout_gravity="center"
+        android:id="@+id/three"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:text="我是蓝伟华3号"
+        android:textColor="#00BFFF"/>
+
+
+</LinearLayout>

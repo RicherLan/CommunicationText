@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/all_show"
+        android:title="全部"/>
+    <item android:id="@+id/hot_show"
+        android:title="热门"/>
+    <item android:title="仅本校"
+        android:id="@+id/school_show"/>
+    <item android:id="@+id/followers_show"
+        android:title="仅关注"/>
+
+</menu>

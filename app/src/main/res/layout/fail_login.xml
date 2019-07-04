@@ -1,0 +1,34 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/shape_corner_white">
+    <TextView
+        android:background="?android:attr/selectableItemBackground"
+        android:id="@+id/reset_password_text"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:text="修改密码"
+        android:gravity="center"
+        android:textSize="14sp"
+        android:textColor="#666666"/>
+    <TextView
+        android:background="?android:attr/selectableItemBackground"
+        android:id="@+id/get_help_text"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:text="修改IP"
+        android:gravity="center"
+        android:textSize="14sp"
+        android:textColor="#666666"/>
+    <TextView
+        android:background="?android:attr/selectableItemBackground"
+        android:id="@+id/cancel_text"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:text="取消"
+        android:gravity="center"
+        android:textSize="14sp"
+        android:textColor="#666666"/>
+</LinearLayout>

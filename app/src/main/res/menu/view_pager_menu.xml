@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/pager_menu_home"
+        android:title="首页"
+        android:icon="@drawable/ic_home"
+        android:fragment="thefirstchange.example.com.communicationtext.fragment.IndexFragment"/>
+    <item
+        android:id="@+id/pager_menu_notification"
+        android:title="消息"
+        android:icon="@drawable/ic_notifications"
+        android:fragment="thefirstchange.example.com.communicationtext.fragment.NotificationFragment"/>
+    <item
+        android:id="@+id/pager_menu_friendship"
+        android:icon="@drawable/ic_friendship"
+        android:fragment="thefirstchange.example.com.communicationtext.fragment.LifeShowFragment"
+        android:title="动态"/>
+    <item
+        android:fragment="thefirstchange.example.com.communicationtext.fragment.MyselfFragment"
+        android:title="我"
+        android:id="@+id/pager_menu_myself"
+        android:icon="@drawable/ic_myself"/>
+
+</menu>

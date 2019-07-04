@@ -1,0 +1,117 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/dimens_45px"
+    android:background="@color/DeepSkyBlue1"
+    android:gravity="center_vertical">
+    <LinearLayout
+        android:layout_marginLeft="10dp"
+        android:layout_width="@dimen/dimens_40px"
+        android:layout_height="@dimen/dimens_40px"
+        android:layout_centerVertical="true"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="@dimen/dimens_40px"
+            android:layout_height="@dimen/dimens_40px"
+            android:padding="3dip" >
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/last_mag_iv"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/user_image1"/>
+
+            <FrameLayout
+                android:layout_gravity="right|bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" >
+
+                <TextView
+                    android:layout_width="9dip"
+                    android:layout_height="9dip"
+                    android:background="@drawable/tips_circle"
+                    android:gravity="center"
+                    android:id="@+id/life_show_msg_nu"
+                    android:textSize="8sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white" />
+            </FrameLayout>
+
+        </FrameLayout>
+
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <TextView
+                android:gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:id="@+id/personal_show_text"
+                android:text="个人动态"
+                android:textColor="#fff"
+                android:textSize="21sp"/>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:id="@+id/personal_show_choose_imag"
+                android:scaleType="center"
+                android:src="@drawable/ic_right_white"/>
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_marginLeft="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <TextView
+                android:gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:id="@+id/union_show_text"
+                android:text="社团动态"
+                android:textColor="#fff"
+                android:textSize="21sp"/>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:id="@+id/union_show_choose_imag"
+                android:scaleType="center"
+                android:src="@drawable/ic_right_white"/>
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="10dp">
+
+        <ImageView
+            android:id="@+id/edit_show"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:src="@drawable/ic_edit_show" />
+
+    </RelativeLayout>
+
+
+</RelativeLayout>

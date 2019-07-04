@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="全部"
+        android:id="@+id/school_all_show"/>
+    <item android:title="热门"
+        android:id="@+id/school_hot_show"/>
+    <item android:title="仅本校"
+        android:id="@+id/school_self_show"/>
+
+</menu>

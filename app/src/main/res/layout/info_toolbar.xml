@@ -1,0 +1,16 @@
+<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/toolbar"
+    android:layout_height="?android:actionBarSize"
+    android:layout_width="match_parent"
+    android:background="@color/colorPrimary">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/client_toolbar_title"
+        android:layout_alignParentRight="true"
+        android:layout_gravity="center"
+        android:textSize="50px"
+        android:text="编辑"
+        android:textColor="#fff"/>
+</android.support.v7.widget.Toolbar>

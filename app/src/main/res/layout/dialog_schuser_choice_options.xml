@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="180dp"
+    android:layout_height="wrap_content"
+    android:layout_marginRight="@dimen/dimens_20px"
+    android:layout_marginLeft="@dimen/dimens_20px"
+    android:background="@drawable/shape_corner_white">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:gravity="center"
+            android:layout_width="90dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <ImageView
+                android:id="@+id/schduty_send_chat"
+                android:clickable="true"
+                android:src="@drawable/choose_chat_option"
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
+            <TextView
+                android:gravity="center"
+                android:text="发消息"
+                android:textSize="15sp"
+                android:textColor="@color/black"
+                android:layout_width="match_parent"
+                android:layout_height="20dp" />
+        </LinearLayout>
+        <LinearLayout
+
+            android:gravity="center"
+            android:layout_width="90dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <ImageView
+                android:id="@+id/schduty_send_call"
+                android:src="@drawable/choose_call_option"
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
+            <TextView
+                android:clickable="true"
+                android:gravity="center"
+                android:text="打电话"
+                android:textSize="15sp"
+                android:textColor="@color/black"
+                android:layout_width="match_parent"
+                android:layout_height="20dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+</RelativeLayout>

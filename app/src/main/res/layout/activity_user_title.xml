@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dimens_48px"
+        android:background="#fff"
+        android:gravity="center"
+       >
+
+        <RelativeLayout
+            android:id="@+id/activity_user_title_tabactivies_rl"
+            android:layout_width="@dimen/dimens_170px"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="@dimen/dimens_15px">
+
+            <TextView
+                android:id="@+id/activity_user_title_tabactivies_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:text="个人主页"
+                android:textColor="#000"
+                android:textSize="@dimen/dimens_14sp" />
+
+            <View
+                android:id="@+id/activity_user_title_tabactivies_view"
+                android:layout_width="@dimen/dimens_80px"
+                android:layout_height="@dimen/dimens_2px"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:background="@color/viewcolor" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/activity_user_title_tabsalt_rl"
+            android:layout_width="@dimen/dimens_170px"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginRight="@dimen/dimens_15px">
+
+            <TextView
+                android:id="@+id/activity_user_title_tabsalt_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:text="详细资料"
+                android:textColor="#000"
+                android:textSize="@dimen/dimens_14sp" />
+
+            <View
+                android:id="@+id/activity_user_title_tabsalt_view"
+                android:layout_width="@dimen/dimens_80px"
+                android:layout_height="@dimen/dimens_2px"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:background="@color/viewcolor" />
+        </RelativeLayout>
+    </RelativeLayout>
+    <View
+        android:background="@color/viewcolor"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dimens_0.5px"/>
+</LinearLayout>

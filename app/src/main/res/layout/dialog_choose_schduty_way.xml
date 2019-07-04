@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+
+        android:id="@+id/dialog_choose_schduty_way1"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:text="安排下一周"
+        android:gravity="center"
+        android:textSize="19sp"
+        android:textColor="@color/DeepSkyBlue1"
+        android:background="@color/gray91"
+        />
+
+    <TextView
+        android:layout_marginTop="5dp"
+        android:id="@+id/dialog_choose_schduty_way2"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:text="安排本周"
+        android:gravity="center"
+        android:textSize="19sp"
+        android:textColor="@color/DeepSkyBlue1"
+        android:background="@color/gray91"/>
+
+    <TextView
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="7dp"
+        android:id="@+id/dialog_choose_schduty_way3"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:text="安排今后7天"
+        android:gravity="center"
+        android:textSize="19sp"
+        android:textColor="@color/DeepSkyBlue1"
+        android:background="@color/gray91"/>
+
+</LinearLayout>

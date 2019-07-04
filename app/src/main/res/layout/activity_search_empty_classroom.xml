@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/tecent_color"
+    >
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/white">
+
+        <RelativeLayout
+            android:background="@color/DeepSkyBlue1"
+            android:layout_width="match_parent"
+            android:layout_height="50dp">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/search_empty_classroom_back_iv"
+                android:src="@drawable/ic_back_gray"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="10dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="21sp"
+                android:textColor="@color/white"
+                android:text="查寻空教室"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="10dp"/>
+        </RelativeLayout>
+
+
+        <View
+            android:layout_width="match_parent"
+            android:background="@color/tecent_color"
+            android:layout_height="10dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            >
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"/>
+            <org.angmarch.views.NiceSpinner
+                android:id="@+id/school_search_empty_classroom_ns"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3.5"
+                android:layout_centerHorizontal="true"
+                />
+
+            <org.angmarch.views.NiceSpinner
+                android:id="@+id/building_search_empty_classroom_ns"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3.5"
+                android:layout_centerHorizontal="true"
+                />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.5"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/week_search_empty_classroom_tv"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:paddingLeft="10dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:text="第1周"
+            android:textSize="18sp"
+            android:gravity="center_vertical"
+            android:textColor="@color/MediumPurple"/>
+        <TextView
+            android:id="@+id/day_search_empty_classroom_tv"
+            android:layout_width="match_parent"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_height="40dp"
+            android:gravity="center_vertical"
+            android:paddingLeft="10dp"
+            android:textSize="18sp"
+            android:text="星期一"
+            android:textColor="@color/MediumPurple"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:background="@color/white"
+            android:layout_height="13dp"
+            />
+
+        <LinearLayout
+            android:id="@+id/jie_search_empty_classroom_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:orientation="vertical">
+
+            <GridLayout
+                android:id="@+id/jie_search_empty_classroom_grid_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:rowCount="6"
+                android:columnCount="9">
+            </GridLayout>
+
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+
+
+    <LinearLayout
+        android:visibility="gone"
+        android:layout_marginTop="25dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:background="@drawable/shape_corner_white">
+
+        <EditText
+            android:paddingLeft="10dp"
+            android:id="@+id/account_search_empty_classroom_et"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:drawableLeft="@drawable/ic_account_box_black_24dp"
+            android:drawablePadding="5dp"
+            android:hint="请输入学号"
+            android:textCursorDrawable="@drawable/shape_et_cursor_color"
+            android:singleLine="true"
+            android:textColorHint="@color/beautifulbackground"
+            android:textColor="@color/Seashell4"
+            android:background="@null"
+            />
+
+        <EditText
+            android:inputType="textPassword"
+            android:paddingLeft="10dp"
+            android:id="@+id/password_search_empty_classroom_et"
+            android:layout_marginTop="5dp"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:drawableLeft="@drawable/password"
+            android:drawablePadding="5dp"
+            android:hint="请输入密码"
+            android:textCursorDrawable="@drawable/shape_et_cursor_color"
+            android:singleLine="true"
+            android:textColorHint="@color/beautifulbackground"
+            android:textColor="@color/Seashell4"
+            android:background="@null"
+            />
+    </LinearLayout>
+
+    <Button
+        android:layout_marginTop="100dp"
+        android:id="@+id/search_empty_classroom_bt"
+        android:layout_width="320dp"
+        android:layout_gravity="center"
+        android:layout_height="45dp"
+        android:text="点击查询"
+        android:textColor="@color/white"
+        android:textSize="17sp"
+        android:background="@drawable/shape"/>
+
+
+</LinearLayout>

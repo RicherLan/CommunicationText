@@ -1,0 +1,1680 @@
+package thefirstchange.example.com.communicationtext.old;
+
+import android.graphics.Bitmap;
+import android.util.Log;
+
+import com.google.gson.Gson;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Vector;
+
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import thefirstchange.example.com.communicationtext.course.supercouesrdemo2.schedulearrangement.RequestSchedule;
+import thefirstchange.example.com.communicationtext.gson.SearchEmptyCourse;
+import thefirstchange.example.com.communicationtext.netty.NettyClient;
+import thefirstchange.example.com.communicationtext.service.ChatMsg;
+import thefirstchange.example.com.communicationtext.service.NettyService;
+import thefirstchange.example.com.communicationtext.service.ObjectService;
+import thefirstchange.example.com.communicationtext.util.MyTools;
+import thefirstchange.example.com.communicationtext.util.PictureUtil;
+
+/*
+向服务器的所有请求
+ */
+public class SendToServer {
+
+    public static String TAG = "SendToServer";
+
+    //链接完全后   认证   服务器验证后   回执信息    这样客户端就可以登陆了
+    public static void auth(){
+
+        int code = 1;
+        String json = "{\"code\":\""+code+"\"}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","auth","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+//                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+//                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+
+    //用户注册  测试阶段
+    public static void registest(String schoolname,String collegename,String majorname,int ruxueyear,String phonenumber,String password){
+
+        String json = "{\"schoolname\":\""+schoolname+"\",\"collegename\":\""+collegename+"\",\"majorname\":\""+majorname+"\",\"ruxueyear\":\""+ruxueyear+"\",\"phonenumber\":\""+phonenumber+"\",\"password\":\""+password+"\"}";
+
+
+        NettyClient.getInstance().sendMsgToServer("notfile","registest","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //群聊天   发送消息
+    public static void sendergroupchattext(ChatMsg msg){
+
+        int groupid = msg.getGroupid();
+        String senderid = msg.getSenderid();
+        String sendergroupname = msg.getSendername();
+        String message = msg.getMsgbody();
+        String msgtype = msg.getMsgtype();
+        long time = msg.getMsgtime();
+
+        String json = "{\"senderid\":\""+senderid+"\",\"sendergroupname\":\""+sendergroupname+"\",\"groupid\":\""+groupid+"\",\"msgtype\":\""+msgtype+"\",\"time\":\""+time+"\"}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","sendergroupchattext "+json,"",message,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //群聊天   发送语音 照片
+    public static String sendergroupchatfile(ChatMsg msg){
+
+        int groupid = msg.getGroupid();
+        String senderid = msg.getSenderid();
+        String sendergroupname = msg.getSendername();
+        String message = msg.getMsgbody();
+        String msgtype = msg.getMsgtype();
+        long time = msg.getMsgtime();
+        double voicetime = msg.getVoicetime();
+        String json = "{\"senderid\":\""+senderid+"\",\"sendergroupname\":\""+sendergroupname+"\",\"groupid\":\""+groupid+"\",\"msgtype\":\""+msgtype+"\",\"time\":\""+time+"\",\"voicetime\":\""+voicetime+"\"}";
+        String filepath = msg.getMsgbody();
+        byte[] bytes = null;
+        if(msg.getMsgtype().equals("voice")){
+            try{
+                File file = new File(filepath);
+                FileInputStream inputFile = new FileInputStream(file);
+                bytes = new byte[(int)file.length()];
+                inputFile.read(bytes);
+                inputFile.close();
+            }catch(FileNotFoundException a){
+                a.printStackTrace();
+                return "filenotfound";
+            }catch (IOException a){
+                a.printStackTrace();
+                return "error";
+            }
+        }else if(msg.getMsgtype().equals("image")){
+            bytes = PictureUtil.bitmapToByte(filepath);
+        }
+
+        if(bytes!=null){
+            NettyClient.getInstance().sendFileMsgToServer("sendergroupchatfile"+" "+json,bytes,new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                    if (channelFuture.isSuccess()) {                //4
+                        Log.d(TAG, "Write auth successful");
+                        //logSend(msg);
+                    } else {
+                        Log.d(TAG, "Write auth error");
+                    }
+                }
+            });
+            return "ok";
+        }
+        return "error";
+    }
+
+
+    //群聊   接收方接收消息后   回执该消息已读
+    public static void reciviergroupchattext(int msgid,int groupid){
+
+        String json = "{\"phonenumber\":\""+ ObjectService.personalInfo.getPhonenumber()+"\",\"msgid\":\""+msgid+"\",\"groupid\":\""+groupid+"\",}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","reciviergroupchattext","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+    //单人聊天   接收方接收消息后   回执该消息已读
+    public static void reciversinglechattext(String senderid,int msgid){
+
+        String json = "{\"senderid\":\""+senderid+"\",\"reciverid\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"msgid\":\""+msgid+"\",}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","reciversinglechattext","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //单人聊天   发送消息
+    public static void sendersinglechattext(ChatMsg msg){
+
+        String senderid = msg.getSenderid();
+        String reciverid = msg.getReceiverid();
+        String message = msg.getMsgbody();
+        String msgtype = msg.getMsgtype();
+        long time = msg.getMsgtime();
+
+        String json = "{\"senderid\":\""+senderid+"\",\"reciverid\":\""+reciverid+"\",\"msgtype\":\""+msgtype+"\",\"time\":\""+time+"\"}";
+        //String json = MyTools.string2Json(json2);
+        NettyClient.getInstance().sendMsgToServer("notfile","sendersinglechattext"+ " "+json,"",message,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //单人聊天   发送语音 照片
+    public static String sendersinglechatfile(ChatMsg msg){
+
+        String senderid = msg.getSenderid();
+        String reciverid = msg.getReceiverid();
+        String message = msg.getMsgbody();
+        String msgtype = msg.getMsgtype();
+        long time = msg.getMsgtime();
+        double voicetime = msg.getVoicetime();
+        String json = "{\"senderid\":\""+senderid+"\",\"reciverid\":\""+reciverid+"\",\"msgtype\":\""+msgtype+"\",\"time\":\""+time+"\",\"voicetime\":\""+voicetime+"\"}";
+        String filepath = msg.getMsgbody();
+        byte[] bytes = null;
+        if(msg.getMsgtype().equals("voice")){
+            try{
+                File file = new File(filepath);
+                FileInputStream inputFile = new FileInputStream(file);
+                bytes = new byte[(int)file.length()];
+                inputFile.read(bytes);
+                inputFile.close();
+            }catch(FileNotFoundException a){
+                a.printStackTrace();
+                return "filenotfound";
+            }catch (IOException a){
+                a.printStackTrace();
+                return "error";
+            }
+        }else if(msg.getMsgtype().equals("image")){
+            bytes = PictureUtil.bitmapToByte(filepath);
+        }
+
+        if(bytes!=null){
+            NettyClient.getInstance().sendFileMsgToServer("sendersinglechatfile"+" "+json,bytes,new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                    if (channelFuture.isSuccess()) {                //4
+                        Log.d(TAG, "Write auth successful");
+                        //logSend(msg);
+                    } else {
+                        Log.d(TAG, "Write auth error");
+                    }
+                }
+            });
+            return "ok";
+        }
+        return "error";
+    }
+
+
+    //登录   结果在loginresult中
+    public static void login(String phonenumber,String password,String type){
+
+
+        NettyService.connect();
+
+        String json = "{\"phonenumber\":\""+phonenumber+"\",\"password\":\""+password+"\",\"type\":\""+type+"\"}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","login","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+
+                } else {
+
+                }
+            }
+        });
+
+    }
+
+    //修改密码   结果在changePasswordResult中
+    public static void changePassword(String oldpassword,String newpassword){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"opwd\":\""+oldpassword+"\",\"npwd\":\""+newpassword+"\"}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","upPwd","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    ///用户注册账号时  判断提交的手机号是否已经被注册
+    public static void isPhonenumberRegisted(String phonenumber){
+
+        String json = "{\"phonenumber\":\""+phonenumber+"\"}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","isPhonenumberRegisted","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //获得短信验证码
+    public static void getPhonenumberCode(String phonenumber) {
+
+        String json = "{\"phonenumber\":\"" + phonenumber + "\"}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile", "getPhonenumberCode", "", json, new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+    }
+
+    //用户注册
+    public static void registeruser(String schoolname,String collegename,String majorname,String nickname,String phonenumber,String password,String code){
+
+        String json = "{\"schoolname\":\""+schoolname+"\",\"collegename\":\""+collegename+"\",\"majorname\":\""+majorname+"\",\"nickname\":\""+nickname+"\",\"phonenumber\":\""+phonenumber+"\",\"password\":\""+password+"\",\"code\":\""+code+"\"}";
+
+
+        NettyClient.getInstance().sendMsgToServer("notfile","registeruser","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //获得某用户的user表中的基本信息
+    public static void getFriendInfoByPhonenumber(String phonenumber){
+
+        String json = "{\"ph1\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"ph2\":\""+phonenumber+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getFrInByPh","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+    }
+
+    //进入某人的个人页面时  获得其基本信息
+    public static void getIndexInfoByPh(String phonenumber){
+
+        String json = "{\"ph1\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"ph2\":\""+phonenumber+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getIndexInfoByPh","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    //Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    //Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+    }
+
+
+    //获得某用户的群的基本信息
+    public static void getGroupsInfoOfUser(String phonenumber){
+
+        String json = "{\"phonenumber\":\""+phonenumber+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getGroupsInfoOfUser","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //获得自己的所有好友信息    一般是刚登陆
+    public static void getAllFriendInfo(){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getAllFriendInfo","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+//                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+//                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //获得自己的所有好友信息    一般是客户端刷新好友列表时用到
+    public static void freshAllFriendInfo(){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","freAllFriInfo","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+//                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+//                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //刷新  消息界面
+    public static void freshNotification(Vector<String> phs){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\"}";
+        String s = new Gson().toJson(phs);
+        NettyClient.getInstance().sendMsgToServer("notfile","freshNotification "+json,"",s,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+//                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+//                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //获得在线的好友有哪些    就是返回在线的账号就行
+    public static void getFriendOnline(String phonenumber){
+
+        String json = "{\"phonenumber\":\""+phonenumber+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getFriendOnline","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //删除自己的某一个好友
+    public static void deleteFriend(String friendphonenumber ){
+
+        String json = "{\"phonenumber\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"friendphonenumber\":\""+friendphonenumber+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","deleteFriend","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //好友删除自己时   自己收到被删除的消息   要回执
+    public static void reciveDeleteMe(int msgid ){
+
+        String json = "{\"msgid\":\""+msgid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","reciveDeleteMe","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //退群
+    public static void exitGroup(int groupid ){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"gid\":\""+groupid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","exitGroup","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //群成员退群时   群管理员收到退群消息时   回执
+    public static void GroupAdmiReciveExitGroup(String phonenumber,int msgid ){
+
+        String json = "{\"phonenumber\":\""+phonenumber+"\",\"msgid\":\""+msgid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","GroupAdmiReciveExitGroup","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+
+    //好友或群请求   收到消息后   更改消息的读取状态
+    public static void changeRequestMsgState(int msgid){
+
+        String json = "{\"mid\":\""+msgid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","upRstMS","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //添加好友
+    public static void addFriend(String phonenumber,String friendid,String addmsg){
+
+        String json = "{\"phonenumber\":\""+phonenumber+"\",\"friendid\":\""+friendid+"\",\"addmsg\":\""+addmsg+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","addFriend","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //用户添加自己为好友   自己给回复  同意还是不同意
+    public static void AddFriendReturn(int msgid,String mynickname,String otherphonenumber,String othernickname,String result){
+
+        String json = "{\"phonenumber\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"msgid\":\""+msgid+"\",\"mynickname\":\""+mynickname+"\",\"otherphonenumber\":\""+otherphonenumber+"\",\"othernickname\":\""+othernickname+"\",\"result\":\""+result+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","AddFriendReturn","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //添加好友时   对方同意或拒绝了你的请求   你已经读到了对方同意还是拒绝   给服务器回执
+    public static void AddFriendResult(int msgid){
+
+        String json = "{\"msgid\":\""+msgid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","AddFriendResult","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //申请加群
+    public static void requestAddGroup(int groupid,String addmsg){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"gid\":\""+groupid+"\",\"addmsg\":\""+addmsg+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","requestAddGroup","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //用户申请加群时   管理员同意或不同意   回执
+    public static void requestAddGroupReturn(int msgid,String otherphonenumber,int groupid,String rs){
+
+        String json = "{\"msgid\":\""+msgid+"\",\"phonenumber\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"otherphonenumber\":\""+otherphonenumber+"\",\"groupid\":\""+groupid+"\",\"rs\":\""+rs+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","requestAddGroupReturn","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //用户申请加群时   管理员同意或不同意   回执
+    public static void ReadaddGroupResult(int msgid){
+
+        String json = "{\"msgid\":\""+msgid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","ReadaddGroupResult","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //拿到所有的好友、群请求信息  一般在刚登陆的时候
+    public static void getRequestFriendOrGroup(String phonenumber){
+
+        String json = "{\"phonenumber\":\""+phonenumber+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getRequestFriendOrGroup","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //拿到单人聊天  未读信息     一般是刚登陆的时候
+    public static void getSingleChatMsgNotRead(String phonenumber){
+
+        String json = "{\"phonenumber\":\""+phonenumber+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getSingleChatMsgNotRead","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //拿到群聊天  未读信息     一般是刚登陆的时候
+    public static void getGroupChatMsgNotRead(String phonenumber){
+
+        String json = "{\"ph\":\""+phonenumber+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getGroupChatMsgNotRead","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //个人信息     一般是刚登陆的时候
+    public static void getPersonalInfo(String phonenumber){
+
+        String json = "{\"phonenumber\":\""+phonenumber+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getPersonalInfo","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+//                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+//                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //客户端添加某人好友时   搜索账号 只需要看到其账号 网名 头像就行   减少请求  服务器负担
+    public static void getNameAndIconByPhonenumber(String phonenumber,String Myphonenumber){
+        String json = "{\"phonenumber\":\""+phonenumber+"\",\"Myphonenumber\":\""+Myphonenumber+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getNameAndIconByPhonenumber","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //客户端添加群时   搜索账号 只需要看到其账号 网名 头像就行   减少请求  服务器负担
+    public static void getNameAndIconByGroupid(int groupid){
+        String json = "{\"gid\":\""+groupid+"\",\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getNameAndIconByGroupid","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //进入用户资料界面  请求某一条动态
+    public static void gUsDtByDTID(String ph,int id){
+        String json = "{\"ph\":\""+ph+"\",\"id\":\""+id+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","gUsDtByDTID","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //进入用户资料界面  用户下拉刷新动态的页面  就是加载新的动态        返回6条动态的id    ph2是要查询的人的账号
+    public static void gUsNDtIDs(String ph1,String ph2){
+        String json = "{\"ph1\":\""+ph1+"\",\"ph2\":\""+ph2+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","gUsNDtIDs","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //进入用户资料界面   用户上拉刷新动态的页面  就是加载旧的动态        返回6条动态的id
+    //从当前的dongtaiid开始往前找6条以前的  ph2为id的主人
+    public static void gUsODtIDs(String ph1,int dongtaiid,String ph2){
+        String json = "{\"ph1\":\""+ph1+"\",\"id\":\""+dongtaiid+"\",\"ph2\":\""+ph2+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","gUsODtIDs","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+
+
+    //请求某一条动态
+    public static void getDongtaiByDTID(int id ){
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"id\":\""+id+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getDongtaiByDTID","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //用户下拉刷新动态的页面  就是加载新的动态        返回6条动态的id
+    public static void getnewDongtaiIDs(String userid){
+        String json = "{\"ph\":\""+userid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getnewDongtaiIDs","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //用户上拉刷新动态的页面  就是加载旧的动态        返回6条动态的id
+    //从当前的dongtaiid开始往前找6条以前的
+    public static void getoldDongtaiIDs(String userid,int dongtaiid){
+        String json = "{\"ph\":\""+userid+"\",\"id\":\""+dongtaiid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getoldDongtaiIDs","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //获得动态消息的内容
+    public static void getDTMsgById(String userid,int id){
+        String json = "{\"ph\":\""+userid+"\",\"id\":\""+id+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getDTMsgById","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //获得动态的第一张图片和内容
+    public static void getDTFirstImAndtextById(String userid,int id){
+        String json = "{\"ph\":\""+userid+"\",\"id\":\""+id+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getDTFirstImAndtextById","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //用户下拉刷新动态消息的页面  就是加载新的动态消息        返回6条动态消息的id
+    public static void getnewDongtaiMsgIDs(String userid){
+        String json = "{\"ph\":\""+userid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getnewDongtaiMsgIDs","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //用户上拉刷新动态消息的页面  就是加载旧的动态消息        返回6条动态消息的id
+    //从当前的id开始往前找6条以前的
+    public static void getoldDongtaiMsgIDs(String userid,int dongtaimsgid){
+        String json = "{\"ph\":\""+userid+"\",\"id\":\""+dongtaimsgid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getoldDongtaiMsgIDs","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //进入某动态的所有评论界面    刚开始要刷新   返回根评论总共10条   大的评论下最多回执3条
+    public static void getNewComByDongtaiId(int dongtaiid){
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"id\":\""+dongtaiid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","gNComByDTid","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //进入某动态的所有评论界面    刚开始要刷新   返回根评论总共10条   大的评论下最多回执3条  获得头像
+    public static void getRtComUIC(String ph2){
+        String json = "{\"ph1\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"ph2\":\""+ph2+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getRtComUIC","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //进入某动态的所有评论界面  上拉刷新   返回根评论总共10条   大的评论下最多回执3条  没有头像
+    public static void getOldComByDongtaiId(String ph,int dtid,int comid){
+        String json = "{\"ph\":\""+ph+"\",\"dtid\":\""+dtid+"\",\"comid\":\""+comid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","gOComByDTid","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+
+    //发表动态    普通用户的话  类型用user表示
+    public static void addDongtai(String usertype,String text,int picturenum,long time){
+        String json = "{\"usertype\":\""+usertype+"\",\"userid\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"text\":\""+text+"\",\"picturenum\":\""+picturenum+"\",\"time\":\""+time+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","addDongtai","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //用户发表动态时   图片分开传送
+    public static void adddongtaiimage(String ph,int dongtaiid,long time,String filepath){
+        String json = "{\"ph\":\""+ph+"\",\"id\":\""+dongtaiid+"\",\"time\":\""+time+"\"}";
+        byte[] bytes  = PictureUtil.bitmapToByte(filepath);
+        NettyClient.getInstance().sendFileMsgToServer("adddongtaiimage"+" "+json,bytes,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+    }
+
+
+    //用户给某一条动态点赞
+    public static void dongtaipraise(String phonenumber,int dongtaiid){
+        String json = "{\"phonenumber\":\""+phonenumber+"\",\"dongtaiid\":\""+dongtaiid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","dongtaipraise","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //收到了别人给自己的动态的点赞  回执服务器已读
+    public static void reciveDongtaiPraise(int id){
+        String json = "{\"id\":\""+id+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","reciveDongtaiPraise","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //给动态评论
+    public static void dongtaiComment(int dongtaiid,String msg){
+        String json = "{\"phonenumber\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"dongtaiid\":\""+dongtaiid+"\",\"msg\":\""+msg+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","dongtaiComment","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //给动态的评论评论
+    public static void dongtaicommentComment(String phonenumber,int dongtaiid,int commentid,String msg){
+        String json = "{\"phonenumber\":\""+phonenumber+"\",\"dongtaiid\":\""+dongtaiid+"\",\"commentid\":\""+commentid+"\",\"msg\":\""+msg+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","dongtaicommentComment","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //收到了别人给自己的动态的评论  回执服务器已读
+    public static void reciveDongtaiComment(int id){
+        String json = "{\"id\":\""+id+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","reciveDongtaiComment","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //拿到自己的动态消息  一般是刚上线的时候
+    public static void getDongtaiMsg(String phonenumber){
+        String json = "{\"phonenumber\":\""+phonenumber+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getDongtaiMsg","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //更改自己的头像
+    public static String ChPerIc(Bitmap bitmap){
+
+
+        String json = "{\"ph\":\""+ ObjectService.personalInfo.getPhonenumber()+"\"}";
+        byte[] bytes;
+
+        bytes = MyTools.Bitmap2Bytes(bitmap);
+
+        NettyClient.getInstance().sendFileMsgToServer("ChPerIc"+" "+json,bytes,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+        return "ok";
+    }
+
+    //获取某人的的头像
+    public static void getPerIc(String type,String phonenumber){
+
+        String json = "{\"type\":\""+type+"\",\"myph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"ph\":\""+phonenumber+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getic","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+//                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+//                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //修改个人资料
+    public static void ChPerIn(String ni,String sex,String from,String add,String sch,String dep,String maj,String bir,int rxy,String info){
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"ni\":\""+ni+"\",\"sex\":\""+sex+"\"," +
+                "\"from\":\""+from+"\",\"add\":\""+add+"\",\"sch\":\""+sch+"\",\"dep\":\""+dep+"\",\"maj\":\""+maj+"\",\"bir\":\""+bir+"\",\"rxy\":\""+rxy+"\",\"info\":\""+info+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","ChPerIn","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+
+
+    //修改好友的备注
+    public static void changeFriendRemark(String friendph ,String remark){
+        String json = "{\"myph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"friendph\":\""+friendph+"\",\"remark\":\""+remark+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","changeFriendRemark","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //客户端添加好友成功后  将好友加入到自己的好友列表  因此需要好友的资料
+    public static void addUserToFriendList(String phonenumber){
+        String json = "{\"myph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"ph\":\""+phonenumber+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","addUserToFriendList","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //修改自己的群名片
+    public static void upGroupRemark(String groupid ,String remark){
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"gid\":\""+groupid+"\",\"remark\":\""+remark+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","upGroupRemark","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //修改自己的部室
+    public static void upGroupPart(int groupid ,String part){
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"gid\":\""+groupid+"\",\"part\":\""+part+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","upGroupPart","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //获得某群的所有成员   没有头像
+    public static void getGroupAllU(int groupid ){
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"groupid\":\""+groupid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getGroupAllU","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //获得某群的所有成员后  向服务器回执     来让服务器发头像
+    public static void okGroupAllU(int groupid ){
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"groupid\":\""+groupid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","okGroupAllU","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //创建社团
+    public static void createCorp(String name,String type,String info ,String corppart,int year,int xueqi){
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"name\":\""+name+"\",\"info\":\""+info+"\",\"type\":\""+type+"\",\"corppart\":\""+corppart+"\",\"year\":\""+year+"\",\"xueqi\":\""+xueqi+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","createCorp","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+
+    //创建群
+    public static void createGroup(String groupname ){
+        String json = "{\"phonenumber\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"groupname\":\""+groupname+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","createGroup","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //加群  或  创建群成功后    把该群的信息加入到自己的群列表中
+    public static void addGroupToListByGroupid(int groupid ){
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"groupid\":\""+groupid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","addGroupToListByGroupid","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //获取课表
+    public static void getkebiaoByPhonenumber(String phonenumber,String schoolname,String xnm,String xqm,String count,String password){
+        String json = "{\"phonenumber\":\""+phonenumber+"\",\"schoolname\":\""+schoolname+"\",\"xnm\":\""+xnm+"\"," +
+                "\"xqm\":\""+xqm+"\",\"count\":\""+count+"\",\"password\":\""+password+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getkebiaoByPhonenumber","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //获取成绩
+    public static void getscoreByPhonenumber(String phonenumber,String schoolname,String xnm,String xqm,String count,String password){
+        String json = "{\"phonenumber\":\""+phonenumber+"\",\"schoolname\":\""+schoolname+"\",\"xnm\":\""+xnm+"\"," +
+                "\"xqm\":\""+xqm+"\",\"count\":\""+count+"\",\"password\":\""+password+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","getscoreByPhonenumber","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //获取在某几节课都有空的学生
+    // integers 下标为   0为自己的账号 1为群号   2  为 year  3为grade 4为第几周   后面都是  周几 节数
+   /* public static void getStuByEptCou(Vector<Integer> integers){
+
+        JSONArray json = new JSONArray(integers);
+        NettyClient.getInstance().sendMsgToServer("notfile","getStuByEptCou","",json.toString(),new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }*/
+
+
+
+    //获得某用户自己的教务成绩
+    public static void getscoByPh(String ph,int xnm,int xqm,String count,String pwd){
+
+        String json = "{\"ph\":\""+ph+"\",\"xnm\":\""+xnm+"\",\"xqm\":\""+xqm+"\",\"count\":\""+count+"\",\"pwd\":\""+pwd+"\"}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","getscoByPh","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //获得某用户自己的教务课表
+    public static void getKBByPh(String ph,int xnm,int xqm,String count,String pwd){
+
+        String json = "{\"ph\":\""+ph+"\",\"xnm\":\""+xnm+"\",\"xqm\":\""+xqm+"\",\"count\":\""+count+"\",\"pwd\":\""+pwd+"\"}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","getKBByPh","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //社团组织成员导入自己的课表
+    public static void loadCourse(int year,int xueqi,String count,String pwd){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"year\":\""+year+"\",\"xueqi\":\""+xueqi+"\",\"count\":\""+count+"\",\"pwd\":\""+pwd+"\"}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","loadCourse","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //安排值班表
+    public static void SA(String account, int year, int xq, int bz, int xz, Vector<RequestSchedule> requestSchedules, String type){
+
+        String json = "{\"account\":\""+Integer.parseInt(account)+"\",\"year\":\""+year+"\",\"xq\":\""+xq+"\",\"bz\":\""+bz+"\",\"xz\":\""+xz+"\",\"type\":\""+type+"\"}";
+//        JSONArray jsonArray = new JSONArray(requestSchedules);
+        String s = new Gson().toJson(requestSchedules) ;
+// for(int i=0;i<requestSchedules.size();++i){
+//            System.out.println(requestSchedules.get(i).way+"                  ----------------------");
+//        }
+        NettyClient.getInstance().sendMsgToServer("notfile","SA "+json,"",s,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //获得自己加入的某个组织的值班表
+    public static void getSDByGid(int groupid){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"gid\":\""+groupid+"\"}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","getSDByGid","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //获得自己加入的所有组织的值班表
+    public static void getAllSD(){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\"}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","getAllSD","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //获得自己的未读的值班的通知
+    public static void getAlldutynoti(){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\"}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","getAlldutynoti","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+    //已经读取值班的通知   向服务器反馈
+    public static void readDutyNoti(int dnid,int gid){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"dnid\":\""+dnid+"\",\"gid\":\""+gid+"\"}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","readDutyNoti","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //社团组织获得   获得某几节课都有空的人
+    public static void searchEmptyCourse(int groupid, int year,int xueqi ,Vector<SearchEmptyCourse> searchEmptyCourses){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"gid\":\""+groupid+"\",\"year\":\""+year+"\",\"xueqi\":\""+xueqi+"\"}";
+        String s = new Gson().toJson(searchEmptyCourses);
+        NettyClient.getInstance().sendMsgToServer("notfile","searchEmptyCourse "+json,"",s,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+//                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+//                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //社团组织查看课表导入情况
+    public static void corpLoadCourseRs(int groupid){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"gid\":\""+groupid+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","corpLoadCourseRs","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+//                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+//                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+    //社团组织群管理修改学年学期
+    public static void alterCorpTerm(int groupid,int year,int xueqi,int zhou){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\",\"gid\":\""+groupid+"\",\"year\":\""+year+"\",\"xueqi\":\""+xueqi+"\",\"zhou\":\""+zhou+"\"}";
+        NettyClient.getInstance().sendMsgToServer("notfile","alterCorpTerm","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+//                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+//                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+
+    //退出登陆
+    public static void loginout(){
+
+        String json = "{\"ph\":\""+ObjectService.personalInfo.getPhonenumber()+"\"}";
+
+        NettyClient.getInstance().sendMsgToServer("notfile","loginout","",json,new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                if (channelFuture.isSuccess()) {                //4
+                    Log.d(TAG, "Write auth successful");
+                    //logSend(msg);
+                } else {
+                    Log.d(TAG, "Write auth error");
+                }
+            }
+        });
+
+    }
+
+
+
+
+
+}

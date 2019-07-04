@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:background="@color/DeepSkyBlue1">
+
+        <TextView
+            android:id="@+id/schduty_tv"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1.5"
+            android:text="排班"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:gravity="center"/>
+        <LinearLayout
+            android:layout_marginTop="4dp"
+            android:id="@+id/schduty_corp_layout"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="5"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/SchDuty_CorpName_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:text=""
+                android:textSize="19sp"
+                android:gravity="center"/>
+            <TextView
+                android:id="@+id/SchDuty_Groupid_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:text=""
+                android:textSize="17sp"
+                android:gravity="center"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/schduty_zhou_tv"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1.5"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:gravity="center"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/white">
+
+        <android.support.v7.widget.RecyclerView
+
+            android:visibility="gone"
+            android:id="@+id/schduty_recyclerview"
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:background="@color/FloralWhite">
+
+        </android.support.v7.widget.RecyclerView>
+
+        <!--值班表界面-->
+        <LinearLayout
+            android:id="@+id/schduty_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <GridLayout
+                android:id="@+id/schduty_grid_title"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@color/WhiteSmoke"
+                android:rowCount="1"
+                android:columnCount="15">
+            </GridLayout>
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:scrollbars="none">
+                <GridLayout
+                    android:id="@+id/schduty_grid_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/white"
+                    android:rowCount="24"
+                    android:columnCount="16">
+                </GridLayout>
+            </ScrollView>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+
+</LinearLayout>

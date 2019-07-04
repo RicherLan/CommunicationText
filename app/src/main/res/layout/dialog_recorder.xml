@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:gravity="center"
+    android:background="@drawable/chat_top_voice_bg"
+    tools:context=".MainActivity">
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <ImageView
+            android:id="@+id/id_recorder_dialog_icon"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/chat_icon_voice1"
+            android:visibility="visible"/>
+        <!--<ImageView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:id="@+id/id_recorder_dialog_voice"-->
+            <!--android:src="@drawable/chat_icon_voice2"-->
+            <!--android:visibility="visible"/>-->
+    </LinearLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/id_recorder_dialog_label"
+        android:layout_marginTop="5dp"
+        android:text="手指上划，取消发送"
+        android:textColor="#ffffff"/>
+
+
+</LinearLayout>

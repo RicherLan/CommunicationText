@@ -1,0 +1,3959 @@
+package thefirstchange.example.com.communicationtext.old;
+
+import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Environment;
+import android.os.IBinder;
+import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Base64;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import org.json.JSONObject;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+import java.util.Vector;
+import java.util.concurrent.ScheduledExecutorService;
+
+import io.netty.buffer.ByteBuf;
+import thefirstchange.example.com.communicationtext.MainActivity;
+import thefirstchange.example.com.communicationtext.adapter.DutyNotiRecyclerAdapter;
+import thefirstchange.example.com.communicationtext.config.Config;
+import thefirstchange.example.com.communicationtext.course.database.dao.StuDao;
+import thefirstchange.example.com.communicationtext.course.object.Course;
+import thefirstchange.example.com.communicationtext.course.object.ListViewScore;
+import thefirstchange.example.com.communicationtext.course.supercouesrdemo2.CourseAndScore;
+import thefirstchange.example.com.communicationtext.course.supercouesrdemo2.SchDutyActivity;
+import thefirstchange.example.com.communicationtext.course.supercouesrdemo2.schedulearrangement.ClientArrangement;
+import thefirstchange.example.com.communicationtext.db.dao.BasicDataDao;
+import thefirstchange.example.com.communicationtext.dongtai.DTComRoot;
+import thefirstchange.example.com.communicationtext.dongtai.Dongtai;
+import thefirstchange.example.com.communicationtext.dongtai.DongtaiMsg;
+import thefirstchange.example.com.communicationtext.dongtai.DongtaiPCTNum;
+import thefirstchange.example.com.communicationtext.gson.CorpUserNotLoadCourse;
+import thefirstchange.example.com.communicationtext.gson.MyFriend;
+import thefirstchange.example.com.communicationtext.gson.MyFriendEasy;
+import thefirstchange.example.com.communicationtext.gson.PersonalInfo;
+import thefirstchange.example.com.communicationtext.gson.StaticAllList;
+import thefirstchange.example.com.communicationtext.gson.StuPNP;
+import thefirstchange.example.com.communicationtext.gson.User;
+import thefirstchange.example.com.communicationtext.gson.UserCorp;
+import thefirstchange.example.com.communicationtext.gson.UserGroup;
+import thefirstchange.example.com.communicationtext.gson.UserInGroupInfo;
+import thefirstchange.example.com.communicationtext.netty.NettyClient;
+import thefirstchange.example.com.communicationtext.netty.NettyListener;
+import thefirstchange.example.com.communicationtext.service.ChatMsg;
+import thefirstchange.example.com.communicationtext.service.DongtaiUploadThread;
+import thefirstchange.example.com.communicationtext.service.MessageTemp;
+import thefirstchange.example.com.communicationtext.service.MyMessageQueue;
+import thefirstchange.example.com.communicationtext.service.ObjectService;
+import thefirstchange.example.com.communicationtext.service.StaticAllListOperator;
+import thefirstchange.example.com.communicationtext.util.MyTools;
+
+
+public class NettyService extends Service implements NettyListener {
+    // Vector<HireCarPosInfo> hireCarPosInfos=new Gson().fromJson(string, new TypeToken<Vector<HireCarPosInfo>>(){}.getType());
+
+    private static String TAG = "NettyService";
+
+    private static boolean isLook=false;
+
+    private NetworkReceiver receiver;
+    private static String sessionId = null;
+    private LocalBroadcastManager localBroadcastManager;
+
+    private ScheduledExecutorService mScheduledExecutorService;
+
+    public static int connetstatuscode=0;
+
+    public static NettyService nettyService;
+
+    private void shutdown() {
+        if (mScheduledExecutorService != null) {
+            mScheduledExecutorService.shutdown();
+            mScheduledExecutorService = null;
+        }
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        receiver = new NetworkReceiver();
+        IntentFilter filter=new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, filter);
+
+        nettyService = this;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        connetstatuscode = NettyListener.STATUS_CONNECT_CLOSED;
+        NettyClient.getInstance().setListener(this);
+       // NettyClient.getInstance().setService(this);
+        connect();
+        return START_NOT_STICKY;
+    }
+
+    @Override
+    public void onServiceStatusConnectChanged(int statusCode) {		//连接状态监听
+        //Timber.d("connect status:%d", statusCode);
+        connetstatuscode = statusCode;
+        if (statusCode == NettyListener.STATUS_CONNECT_SUCCESS) {
+//            authenticData();
+            SendToServer.auth();
+        } else {
+            /*
+                 //与服务器失去联系
+                  1 .网络关闭  这个就不要处理   在父Activity以及监听网络变化并做了网络恢复时链接服务器
+                  2.网络状况差   这时就要隔一定时间链接服务器  直到链接成功
+                  3.其他原因  暂不处理
+
+                  掉线后每隔20秒连接
+             */
+            NettyClient.getInstance().reconnect(20000);
+//            Toast.makeText(NettyService.this,"",Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public static boolean isconnect(){
+        return NettyClient.getInstance().getConnectStatus();
+    }
+
+    /**
+     * 认证数据请求
+     */
+    /*private void authenticData() {
+        AuthModel auth = new AuthModel();
+        auth.setI(1);
+        auth.setU("sn");
+        auth.setN("name");
+        auth.setF("1");
+        auth.setT((int)(System.currentTimeMillis() / 1000));
+        byte[] content = RequestUtil.getEncryptBytes(auth);
+        byte[] requestHeader = RequestUtil.getRequestHeader(content, 1, 1001);
+        byte[] requestBody = RequestUtil.getRequestBody(requestHeader, content);
+        NettyClient.getInstance().sendMsgToServer(requestBody, new ChannelFutureListener() {    //3
+            @Override
+            public void operationComplete(ChannelFuture future) {
+                if (future.isSuccess()) {                //4
+                    Timber.d("Write auth successful");
+                } else {
+                    Timber.d("Write auth error");
+                    WriteLogUtil.writeLogByThread("tcp auth error");
+                }
+            }
+        });
+    }*/
+
+    @Override
+    public void onMessageResponse(ByteBuf byteBuf) {
+
+        try {
+            int sumlength = byteBuf.readInt();
+
+            int nameSize = byteBuf.readInt();
+            // System.out.println(nameSize);
+            byte[] bs = new byte[nameSize];
+            byteBuf.readBytes(bs);
+//		    		 //String name = new String(byteBuf.readBytes(nameSize).array(), "UTF-8");
+            String name = new String(bs, "UTF-8");
+            // System.out.println(name);
+
+            int fileSize = byteBuf.readInt();
+
+            byte[] bs2 = new byte[fileSize];
+            byteBuf.readBytes(bs2);
+            String msgbody = new String(bs2, "UTF-8");
+
+//            Log.e("ttasasasas",name);
+//            Log.e("wewewe",msgbody);
+
+            //心跳包服务器回执      什么也不做
+            if(name.equals("ping")){
+
+                //接收到群聊的   文本消息   消息体     读完后要回执服务器我已经读完  加入消息队列
+                //当消息队列中该群的消息很多时  只需要回复最大的消息id即可
+                // "{\"msgid\":\""+id2+"\",\"senderid\":\""+senderid+"\",\"groupid\":\""+groupid+"\",\"message\":\""+message+"\",\"msgtype\":\""+msgtype+"\",\"msgtime\":\""+msgtime+"\"}";
+            }else if(name.startsWith("recivegroupchattext")){
+
+                if(name.split(" ").length<2) {
+                    return;
+                }
+                String msgbody2 = name.split(" ")[1];
+
+
+                JSONObject jsonObject = new JSONObject(msgbody2);
+                int msgid = jsonObject.getInt("msgid");
+                String senderid = jsonObject.getString("senderid");
+                String sendergroupnickname = jsonObject.getString("sendergroupname");
+                int groupid = jsonObject.getInt("groupid");
+                String message = msgbody;
+                String msgtype = jsonObject.getString("msgtype");
+                long msgtime = jsonObject.getLong("msgtime");
+
+
+                ChatMsg chatMsg = new ChatMsg();
+
+                chatMsg.setMsgid(msgid);
+                chatMsg.setType("group");
+                chatMsg.setGroupid(groupid);
+                chatMsg.setSenderid(senderid);
+                chatMsg.setSendername(sendergroupnickname);
+                chatMsg.setReceiverid(ObjectService.personalInfo.getPhonenumber());
+                chatMsg.setReceivername(ObjectService.personalInfo.getNickname());
+                chatMsg.setMsgtype("text");
+                chatMsg.setMsgbody(message);
+                chatMsg.setMsgtime(msgtime);
+
+                //说明  该消息已经在 本机保存了    是因为之前来了消息自己一直没有读取
+                if(MyMessageQueue.chatQueueNotRead.containsKey(groupid+"")){
+                    for(int i=0;i<MyMessageQueue.chatQueueNotRead.get(groupid+"").size();++i){
+                        if(chatMsg.getMsgid()==MyMessageQueue.chatQueueNotRead.get(groupid+"").get(i).getMsgid()){
+                            return;
+                        }
+                    }
+                }
+
+
+                if(StaticAllList.chatRecordDao!=null){
+                    int id = StaticAllList.chatRecordDao.saveGroup(chatMsg);
+                    chatMsg.setId(id);
+                }else{
+                    MainActivity.initChatRecorddb();
+                    int id = StaticAllList.chatRecordDao.saveGroup(chatMsg);
+                    chatMsg.setId(id);
+                }
+
+                boolean firstNotice = true;
+                if( MyMessageQueue.chatframes.containsKey(groupid+"")){
+                    firstNotice = false;
+                }else{
+                    //加入到聊天框队列
+                    MyMessageQueue.chatframes.put(groupid+"","group");
+                }
+
+                if(MyMessageQueue.chatQueueNotRead.containsKey(groupid+"")){
+                    MyMessageQueue.chatQueueNotRead.get(groupid+"").add(chatMsg);
+
+                }else{
+                    MyMessageQueue.chatQueueNotRead.put(groupid+"",new Vector<ChatMsg>());
+                    MyMessageQueue.chatQueueNotRead.get(groupid+"").add(chatMsg);
+                }
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.GROUP_MSG");
+                //intent.addFlags(Intent.FLAG_EXCLUDE_STOPPED_PACKAGES);
+                intent2.putExtra("type","recivegroupchattext");
+                sendCast(intent2);
+
+                Intent intent1=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent1.putExtra("type","recivegroupchattext");
+                sendCast(intent1);
+
+
+
+                if(firstNotice){
+                    if(StaticAllList.chatRecordDao!=null){
+                       StaticAllList.chatRecordDao.saveNoticeFrame("group","",groupid);
+                    }else{
+                        MainActivity.initChatRecorddb();
+                        StaticAllList.chatRecordDao.saveNoticeFrame("group","",groupid);
+                    }
+                }
+
+
+            //群消息  语音或图片
+            } else if(name.startsWith("recivegroupchatfile")){
+            if(name.split(" ").length<2) {
+                return;
+            }
+            String msgbody2 = name.split(" ")[1];
+            JSONObject jsonObject = new JSONObject(msgbody2);
+            int msgid = jsonObject.getInt("msgid");
+            String senderid = jsonObject.getString("senderid");
+            String sendergroupnickname = jsonObject.getString("sendergroupname");
+            int groupid = jsonObject.getInt("groupid");
+            String msgtype = jsonObject.getString("msgtype");
+
+                //此时message中存的是路径   bs2 这个字节数组就是内容
+                String message = null;
+                if(msgtype.equals("voice")){
+                    // File(Environment.getExternalStorageDirectory()+"/recorder_audios", UUID.randomUUID().toString()+".amr");
+                    message = Config.path1+"/"+UUID.randomUUID().toString()+".amr";
+                    OutputStream out = new FileOutputStream(message);
+                    InputStream is = new ByteArrayInputStream(bs2);
+                    byte[] buff = new byte[1024];
+                    int len = 0;
+                    while((len=is.read(buff))!=-1){
+                        out.write(buff, 0, len);
+                    }
+                    is.close();
+                    out.close();
+                }else{
+                    message = Config.path2+"/"+UUID.randomUUID().toString()+".jpg";
+                    byte[] bs3 =  Base64.decode(bs2,Base64.DEFAULT);
+                    OutputStream out = new FileOutputStream(message);
+                    InputStream is = new ByteArrayInputStream(bs3);
+                    byte[] buff = new byte[1024];
+                    int len = 0;
+                    while((len=is.read(buff))!=-1){
+                        out.write(buff, 0, len);
+                    }
+                    is.close();
+                    out.close();
+                }
+
+            long msgtime = jsonObject.getLong("msgtime");
+            double voicetime = jsonObject.getDouble("voicetime");
+            ChatMsg chatMsg = new ChatMsg();
+
+
+            chatMsg.setMsgid(msgid);
+            chatMsg.setType("group");
+            chatMsg.setGroupid(groupid);
+            chatMsg.setSenderid(senderid);
+            chatMsg.setSendername(sendergroupnickname);
+            chatMsg.setReceiverid(ObjectService.personalInfo.getPhonenumber());
+            chatMsg.setReceivername(ObjectService.personalInfo.getNickname());
+            chatMsg.setMsgtype(msgtype);
+            chatMsg.setMsgbody(message);
+            chatMsg.setMsgtime(msgtime);
+            chatMsg.setVoicetime(voicetime);
+
+            if(MyMessageQueue.chatQueueNotRead.containsKey(groupid+"")){
+                for(int i=0;i<MyMessageQueue.chatQueueNotRead.get(groupid+"").size();++i){
+                    if(chatMsg.getMsgid()==MyMessageQueue.chatQueueNotRead.get(groupid+"").get(i).getMsgid()){
+                        return;
+                    }
+                }
+            }
+
+
+                if(StaticAllList.chatRecordDao!=null){
+                    int id = StaticAllList.chatRecordDao.saveGroup(chatMsg);
+                    chatMsg.setId(id);
+                }else{
+                    MainActivity.initChatRecorddb();
+                    int id = StaticAllList.chatRecordDao.saveGroup(chatMsg);
+                    chatMsg.setId(id);
+                }
+
+
+            boolean firstNotice = true;
+                if( MyMessageQueue.chatframes.containsKey(groupid+"")){
+                    firstNotice = false;
+                }else{
+                    //加入到聊天框队列
+                    MyMessageQueue.chatframes.put(groupid+"","group");
+                }
+
+            if(MyMessageQueue.chatQueueNotRead.containsKey(groupid+"")){
+                MyMessageQueue.chatQueueNotRead.get(groupid+"").add(chatMsg);
+
+            }else{
+                MyMessageQueue.chatQueueNotRead.put(groupid+"",new Vector<ChatMsg>());
+                MyMessageQueue.chatQueueNotRead.get(groupid+"").add(chatMsg);
+            }
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.GROUP_MSG");
+                //intent.addFlags(Intent.FLAG_EXCLUDE_STOPPED_PACKAGES);
+                intent2.putExtra("type","recivegroupchatfile");
+                sendCast(intent2);
+                Intent intent1=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent1.putExtra("type","recivegroupchatfile");
+                sendCast(intent1);
+
+                if(firstNotice){
+                    if(StaticAllList.chatRecordDao!=null){
+                        StaticAllList.chatRecordDao.saveNoticeFrame("group","",groupid);
+                    }else{
+                        MainActivity.initChatRecorddb();
+                        StaticAllList.chatRecordDao.saveNoticeFrame("group","",groupid);
+                    }
+                }
+
+            //发送图片 语音是否成功
+        }else if(name.equals("sendergroupchatfileResult")){
+            JSONObject jsonObject = new JSONObject(msgbody);
+            String rs = jsonObject.getString("rs");
+            //这个时间是当初客户端发送时  发送给服务器的时间戳  用来找是哪条消息  因为到服务器返回来 可能有多条消息
+            long msgtime = jsonObject.getLong("msgtime");
+
+            Intent intent2=new Intent("thefirstchange.example.com.communicationtext.SINGLE_MSG_NO");
+            //intent.addFlags(Intent.FLAG_EXCLUDE_STOPPED_PACKAGES);
+                intent2.putExtra("type","sendergroupchatfileResult");
+                intent2.putExtra("rs",rs);
+                intent2.putExtra("msgtime",msgtime);
+                sendCast(intent2);
+
+        }
+
+        //单人聊天	 接收消息
+            else if(name.startsWith("recivesinglechattext")){
+
+                if(name.split(" ").length<2) {
+                    return;
+                }
+                String msgbody2 = name.split(" ")[1];
+                JSONObject jsonObject = new JSONObject(msgbody2);
+                //接收到群聊的   文本消息   消息体     读完后要回执服务器我已经读完  加入消息队列
+                //当消息队列中该群的消息很多时  只需要回复最大的消息id即可
+                // String json = "{\"msgid\":\""+id+"\",\"senderid\":\""+senderid+"\",\"message\":\""+message+"\",\"msgtype\":\""+msgtype+"\",\"msgtime\":\""+msgtime+"\"}";
+
+                int msgid = jsonObject.getInt("msgid");
+                String senderid = jsonObject.getString("senderid");
+                // String sendergroupnickname = jsonObject.getString("sendergroupnickname");
+                String message =msgbody;
+                String msgtype = jsonObject.getString("msgtype");
+                long msgtime = jsonObject.getLong("msgtime");
+
+                //好友的备注   服务器不发送   手机上有好友列表   从里面查询就行
+                String sendergroupnickname = "";
+                if(StaticAllList.friendList.containsKey(senderid)){
+                     sendergroupnickname = StaticAllList.friendList.get(senderid).getNickname();
+                }
+
+                ChatMsg chatMsg = new ChatMsg();
+                chatMsg.setMsgid(msgid);
+                chatMsg.setType("single");
+                chatMsg.setSenderid(senderid);
+                chatMsg.setSendername(sendergroupnickname);
+                chatMsg.setReceiverid(ObjectService.personalInfo.getPhonenumber());
+                chatMsg.setReceivername(ObjectService.personalInfo.getNickname());
+                chatMsg.setMsgtype("text");
+                chatMsg.setMsgbody(message);
+                chatMsg.setMsgtime(msgtime);
+
+                String iconpath = MyTools.getIconPath(senderid);
+                if(iconpath!=null){
+                    chatMsg.setSendericon(iconpath);
+                }
+
+                //如果已经存在   那么就说明   已经保存到消息队列和数据库中了   直接return
+                if(MyMessageQueue.chatQueueNotRead.containsKey(senderid)){
+                    for(int i=0;i<MyMessageQueue.chatQueueNotRead.get(senderid).size();++i){
+                        if(chatMsg.getMsgid()==MyMessageQueue.chatQueueNotRead.get(senderid).get(i).getMsgid()){
+                            return;
+                        }
+                    }
+                }
+
+
+
+                if(StaticAllList.chatRecordDao!=null){
+                    int id = StaticAllList.chatRecordDao.saveSingle(chatMsg);
+                    chatMsg.setId(id);
+                }else{
+                    MainActivity.initChatRecorddb();
+                    int id = StaticAllList.chatRecordDao.saveSingle(chatMsg);
+                    chatMsg.setId(id);
+                }
+
+                boolean firstNotice = true;
+                if( MyMessageQueue.chatframes.containsKey(senderid)){
+                    firstNotice = false;
+                }else{
+                    //加入到聊天框队列
+                    MyMessageQueue.chatframes.put(senderid,"single");
+                }
+                if(MyMessageQueue.chatQueueNotRead.containsKey(senderid)){
+                    MyMessageQueue.chatQueueNotRead.get(senderid).add(chatMsg);
+
+                }else{
+                    MyMessageQueue.chatQueueNotRead.put(senderid,new Vector<ChatMsg>());
+                    MyMessageQueue.chatQueueNotRead.get(senderid).add(chatMsg);
+                }
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.SINGLE_MSG_NO");
+                //intent.addFlags(Intent.FLAG_EXCLUDE_STOPPED_PACKAGES);
+                intent2.putExtra("type","recivesinglechattext");
+                sendCast(intent2);
+                Intent intent1=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent1.putExtra("type","recivesinglechattext");
+                sendCast(intent1);
+
+                if(firstNotice){
+                    if(StaticAllList.chatRecordDao!=null){
+                        StaticAllList.chatRecordDao.saveNoticeFrame("single",senderid,-1);
+                    }else{
+                        MainActivity.initChatRecorddb();
+                        StaticAllList.chatRecordDao.saveNoticeFrame("single",senderid,-1);
+                    }
+                }
+
+                //接收语音 图片
+            } else if(name.startsWith("recivesinglechatfile")){
+
+            if(name.split(" ").length<2) {
+                return;
+            }
+            String msgbody2 = name.split(" ")[1];
+            JSONObject jsonObject = new JSONObject(msgbody2);
+            int msgid = jsonObject.getInt("msgid");
+            String senderid = jsonObject.getString("senderid");
+            String msgtype = jsonObject.getString("msgtype");
+
+            //此时message中存的是路径   bs2 这个字节数组就是内容
+            String message = null;
+            if(msgtype.equals("voice")){
+                // File(Environment.getExternalStorageDirectory()+"/recorder_audios", UUID.randomUUID().toString()+".amr");
+                message = Config.path1+"/"+UUID.randomUUID().toString()+".amr";
+                OutputStream out = new FileOutputStream(message);
+                InputStream is = new ByteArrayInputStream(bs2);
+                byte[] buff = new byte[1024];
+                int len = 0;
+                while((len=is.read(buff))!=-1){
+                    out.write(buff, 0, len);
+                }
+                is.close();
+                out.close();
+            }else{
+                message = Config.path2+"/"+UUID.randomUUID().toString()+".jpg";
+               byte[] bs3 =  Base64.decode(bs2,Base64.DEFAULT);
+                OutputStream out = new FileOutputStream(message);
+                InputStream is = new ByteArrayInputStream(bs3);
+                byte[] buff = new byte[1024];
+                int len = 0;
+                while((len=is.read(buff))!=-1){
+                    out.write(buff, 0, len);
+                }
+                is.close();
+                out.close();
+            }
+
+            long msgtime = jsonObject.getLong("msgtime");
+            double voicetime = jsonObject.getDouble("voicetime");
+            //好友的备注   服务器不发送   手机上有好友列表   从里面查询就行
+            String sendergroupnickname = "";
+            for(String id:StaticAllList.friendList.keySet()){
+
+                if(id.equals(senderid)){
+                    sendergroupnickname = StaticAllList.friendList.get(id).getNickname();
+                }
+            }
+
+
+            ChatMsg chatMsg = new ChatMsg();
+            chatMsg.setMsgid(msgid);
+            chatMsg.setType("single");
+            chatMsg.setSenderid(senderid);
+            chatMsg.setSendername(sendergroupnickname);
+            chatMsg.setReceiverid(ObjectService.personalInfo.getPhonenumber());
+            chatMsg.setReceivername(ObjectService.personalInfo.getNickname());
+            chatMsg.setMsgtype(msgtype);
+            chatMsg.setMsgbody(message);
+            chatMsg.setMsgtime(msgtime);
+            chatMsg.setVoicetime(voicetime);
+
+            String iconpath = MyTools.getIconPath(senderid);
+            if(iconpath!=null){
+                chatMsg.setSendericon(iconpath);
+            }
+
+                //如果已经存在   那么就说明   已经保存到消息队列和数据库中了   直接return
+                if(MyMessageQueue.chatQueueNotRead.containsKey(senderid)){
+                    for(int i=0;i<MyMessageQueue.chatQueueNotRead.get(senderid).size();++i){
+                        if(chatMsg.getMsgid()==MyMessageQueue.chatQueueNotRead.get(senderid).get(i).getMsgid()){
+                            return;
+                        }
+                    }
+                }
+
+                if(StaticAllList.chatRecordDao!=null){
+                    int id = StaticAllList.chatRecordDao.saveSingle(chatMsg);
+                    chatMsg.setId(id);
+                }else{
+                    MainActivity.initChatRecorddb();
+                    int id = StaticAllList.chatRecordDao.saveSingle(chatMsg);
+                    chatMsg.setId(id);
+                }
+
+            boolean firstNotice = true;
+                if( MyMessageQueue.chatframes.containsKey(senderid)){
+                    firstNotice = false;
+                }else{
+                    //加入到聊天框队列
+                    MyMessageQueue.chatframes.put(senderid,"single");
+                }
+            if(MyMessageQueue.chatQueueNotRead.containsKey(senderid)){
+                MyMessageQueue.chatQueueNotRead.get(senderid).add(chatMsg);
+            }else{
+                MyMessageQueue.chatQueueNotRead.put(senderid,new Vector<ChatMsg>());
+                MyMessageQueue.chatQueueNotRead.get(senderid).add(chatMsg);
+            }
+            Intent intent2=new Intent("thefirstchange.example.com.communicationtext.SINGLE_MSG_NO");
+            //intent.addFlags(Intent.FLAG_EXCLUDE_STOPPED_PACKAGES);
+                intent2.putExtra("type","recivesinglechatfile");
+            sendCast(intent2);
+            Intent intent1=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent1.putExtra("type","recivesinglechatfile");
+            sendCast(intent1);
+
+                if(firstNotice){
+                    if(StaticAllList.chatRecordDao!=null){
+                        StaticAllList.chatRecordDao.saveNoticeFrame("single",senderid,-1);
+                    }else{
+                        MainActivity.initChatRecorddb();
+                        StaticAllList.chatRecordDao.saveNoticeFrame("single",senderid,-1);
+                    }
+                }
+
+        }else if(name.equals("sendersinglechatfileResult")){
+            JSONObject jsonObject = new JSONObject(msgbody);
+            String rs = jsonObject.getString("rs");
+            //这个时间是当初客户端发送时  发送给服务器的时间戳  用来找是哪条消息  因为到服务器返回来 可能有多条消息
+            long msgtime = jsonObject.getLong("msgtime");
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.SINGLE_MSG_NO");
+                //intent.addFlags(Intent.FLAG_EXCLUDE_STOPPED_PACKAGES);
+                intent2.putExtra("type","sendersinglechatfileResult");
+                intent2.putExtra("rs",rs);
+                intent2.putExtra("msgtime",msgtime);
+                sendCast(intent2);
+
+        }
+
+        //拿到别人给自己发的自己未读的消息    一上线的时候
+        else if(name.equals("getSChatMsgNRRs")){
+                Vector<ChatMsg> singleChatMsgs = new Gson().fromJson(msgbody, new TypeToken<Vector<ChatMsg>>(){}.getType());
+                for(int i=0;i<singleChatMsgs.size();++i){
+
+                    ChatMsg chatMsg = singleChatMsgs.get(i);
+                    String senderid = chatMsg.getSenderid();
+                    //如果已经存在   那么就说明   已经保存到消息队列和数据库中了
+                    boolean flag = false;
+                    if(MyMessageQueue.chatQueueNotRead.containsKey(senderid)){
+                        for(int j=0;j<MyMessageQueue.chatQueueNotRead.get(senderid).size();++j){
+                            if(chatMsg.getMsgid()==MyMessageQueue.chatQueueNotRead.get(senderid).get(j).getMsgid()){
+                                flag = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if(flag){
+                        continue;
+                    }
+
+                    String iconpath = MyTools.getIconPath(senderid);
+                    if(iconpath!=null){
+                        chatMsg.setSendericon(iconpath);
+                    }
+
+                    if(StaticAllList.chatRecordDao!=null){
+                        int id = StaticAllList.chatRecordDao.saveSingle(chatMsg);
+                        chatMsg.setId(id);
+                    }else{
+                        MainActivity.initChatRecorddb();
+                        int id = StaticAllList.chatRecordDao.saveSingle(chatMsg);
+                        chatMsg.setId(id);
+                    }
+
+
+                    if(MyMessageQueue.chatQueueNotRead.containsKey(senderid)){
+                        MyMessageQueue.chatQueueNotRead.get(senderid).add(chatMsg);
+                    }else{
+                        MyMessageQueue.chatQueueNotRead.put(senderid,new Vector<ChatMsg>());
+                        MyMessageQueue.chatQueueNotRead.get(senderid).add(chatMsg);
+                    }
+                    boolean firstNotice = true;
+                    if( MyMessageQueue.chatframes.containsKey(senderid)){
+                        firstNotice = false;
+                    }else{
+                        MyMessageQueue.chatframes.put(senderid,"single");
+                    }
+                    if(firstNotice){
+                        if(StaticAllList.chatRecordDao!=null){
+                            StaticAllList.chatRecordDao.saveNoticeFrame("single",senderid,-1);
+                        }else{
+                            MainActivity.initChatRecorddb();
+                            StaticAllList.chatRecordDao.saveNoticeFrame("single",senderid,-1);
+                        }
+                    }
+                }
+                Intent intent1=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent1.putExtra("type","getSChatMsgNRRs");
+                sendCast(intent1);
+
+
+                ///拿到群给自己发的未读的消息    一上线的时候
+            }else if(name.equals("getGChatMsgNRRs")){
+
+                Vector<ChatMsg> groupChatMsgs = new Gson().fromJson(msgbody, new TypeToken<Vector<ChatMsg>>(){}.getType());
+                for(int i=0;i<groupChatMsgs.size();++i){
+
+                    ChatMsg chatMsg = groupChatMsgs.get(i);
+                    String ss = chatMsg.getMsgbody();
+                    int groupid = chatMsg.getGroupid();
+                    boolean flag = false;
+                    if(MyMessageQueue.chatQueueNotRead.containsKey(groupid+"")){
+                        for(int j=0;j<MyMessageQueue.chatQueueNotRead.get(groupid+"").size();++j){
+                            if(chatMsg.getMsgid()==MyMessageQueue.chatQueueNotRead.get(groupid+"").get(j).getMsgid()){
+                                flag = true;
+                                break;
+                            }
+                        }
+                    }
+                    if(flag){
+                        continue;
+                    }
+                    if(StaticAllList.chatRecordDao!=null){
+                        int id = StaticAllList.chatRecordDao.saveGroup(chatMsg);
+                        chatMsg.setId(id);
+                    }else{
+                        MainActivity.initChatRecorddb();
+                        int id = StaticAllList.chatRecordDao.saveGroup(chatMsg);
+                        chatMsg.setId(id);
+                    }
+
+
+                    if(MyMessageQueue.chatQueueNotRead.containsKey(groupid+"")){
+                        MyMessageQueue.chatQueueNotRead.get(groupid+"").add(chatMsg);
+                    }else{
+                        MyMessageQueue.chatQueueNotRead.put(groupid+"",new Vector<ChatMsg>());
+                        MyMessageQueue.chatQueueNotRead.get(groupid+"").add(chatMsg);
+                    }
+
+                    boolean firstNotice = true;
+                    if(MyMessageQueue.chatframes.containsKey(groupid+"")){
+                        firstNotice = false;
+                    }else{
+                        MyMessageQueue.chatframes.put(groupid+"","group");
+                    }
+                    if(firstNotice){
+                        if(StaticAllList.chatRecordDao!=null){
+                            StaticAllList.chatRecordDao.saveNoticeFrame("group","",groupid);
+                        }else{
+                            MainActivity.initChatRecorddb();
+                            StaticAllList.chatRecordDao.saveNoticeFrame("group","",groupid);
+                        }
+                    }
+
+
+                }
+                Intent intent1=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent1.putExtra("type","getGChatMsgNRRs");
+                sendCast(intent1);
+
+
+
+
+                //拿到所有的好友、群请求信息  一般在刚登陆的时候
+            } else if(name.equals("getRequestFriendOrGroupResult")){
+                MyMessageQueue.requestQueueNotHandle =  new Gson().fromJson(msgbody, new TypeToken<Vector<ChatMsg>>(){}.getType());
+
+                String ph = null;
+                int msgid = -1;
+                for(int i=0;i< MyMessageQueue.requestQueueNotHandle.size();++i){
+                    ChatMsg chatMsg =  MyMessageQueue.requestQueueNotHandle.get(i);
+                    if(chatMsg.getType().equals("yourfrienddeleteyou")){
+                        ph = chatMsg.getSenderid();
+                        msgid = chatMsg.getMsgid();
+                        StaticAllList.friendList.remove(ph);
+
+                    }
+                }
+                if(ph!=null){
+                    MyMessageQueue.requestQueueNotHandle.remove(ph);
+                    SendToServer.reciveDeleteMe(msgid);
+                }
+
+
+                //客户端添加某人好友时   搜索账号 只需要看到其账号 网名 头像就行   减少请求  服务器负担
+        }else if(name.equals("searchUInfoRs")){
+            JSONObject jsonObject = new JSONObject(msgbody);
+            //  ok    notexist
+            String rs = jsonObject.getString("rs");
+            String phonenumber = jsonObject.getString("ph");
+            if(rs.equals("ok")){
+                String nickname = jsonObject.getString("nickname");
+//            String icon = jsonObject.getString("usericonpath");
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.ADD_FRIEND");
+                intent.putExtra("type","searchUInfoRs");
+                intent.putExtra("rs",rs);
+                intent.putExtra("phonenumber",phonenumber);
+                intent.putExtra("nickname",nickname);
+//            intent.putExtra("usericonpath",icon);
+                sendCast(intent);
+
+            }else if(rs.equals("notexist")){
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.ADD_FRIEND");
+                intent.putExtra("type","getNameAndIconByPhonenumberResult");
+                intent.putExtra("rs",rs);
+                intent.putExtra("phonenumber",phonenumber);
+//            intent.putExtra("usericonpath",icon);
+                sendCast(intent);
+            }
+
+
+
+            //客户端添加群时   搜索账号 只需要看到其账号 网名 头像就行   减少请求  服务器负担
+        }else if(name.equals("searchGInfoRs")){
+            JSONObject jsonObject = new JSONObject(msgbody);
+            int groupid = jsonObject.getInt("gid");
+            String rs = jsonObject.getString("rs");
+            if(rs.equals("ok")){
+                String groupname = jsonObject.getString("gname");
+                String icon = jsonObject.getString("icon");
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.ADD_GROUP");
+                intent.putExtra("type","searchGInfoRs");
+                intent.putExtra("groupid",groupid);
+                intent.putExtra("groupname",groupname);
+                intent.putExtra("usericonpath",icon);
+                intent.putExtra("rs",rs);
+                sendCast(intent);
+            }else if(rs.equals("notexist")){
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.ADD_GROUP");
+                intent.putExtra("type","searchGInfoRs");
+                intent.putExtra("groupid",groupid);
+                intent.putExtra("rs",rs);
+                sendCast(intent);
+            }
+
+
+            //进入某用户的资料界面       用户下拉刷新动态的页面  就是请求新的动态
+            //服务器收到返回动态的id     否则客户端超时  就提示刷新失败
+        }else if(name.startsWith("gUsNDtIDsRs")) {
+
+                if (name.split(" ").length < 2) {
+                    return;
+                }
+                String msgbody2 = name.split(" ")[1];
+
+                JSONObject jsonObject = new JSONObject(msgbody2);
+                String ph = jsonObject.getString("ph");
+
+                Vector<DongtaiPCTNum> dongtaiPCTNums = new Gson().fromJson(msgbody, new TypeToken<Vector<DongtaiPCTNum>>() {
+                }.getType());
+                Vector<Integer> dongtaiIDs = new Vector<>();
+                if (dongtaiPCTNums != null) {
+                    for (int i = 0; i < dongtaiPCTNums.size(); ++i) {
+                        dongtaiIDs.add(dongtaiPCTNums.get(i).id);
+                    }
+                }
+
+                Vector<Dongtai> dongtais = new Vector<>();
+                if (StaticAllList.personalDongtais.containsKey(ph)) {
+                    dongtais = StaticAllList.personalDongtais.get(ph);
+                }
+
+
+
+                Vector<Integer> need = new Vector<>();
+                Vector<Integer> delete = new Vector<>();
+                if (dongtaiIDs != null && dongtaiIDs.size() != 0) {
+                    int minid = dongtaiIDs.get(dongtaiIDs.size() - 1);
+
+                    //找出被动态主人删除的动态
+                    for (int i = 0; i < dongtais.size() && i < 6; ++i) {
+                        int id = dongtais.get(i).getId();
+                        if (id > minid) {
+                            boolean flag = true;
+                            for (int j = 0; j < dongtaiIDs.size(); ++j) {
+                                if (id == dongtaiIDs.get(j)) {
+                                    flag = false;
+                                    break;
+                                }
+                            }
+                            if (flag) {
+                                delete.add(i);
+                            }
+                        }
+                    }
+
+                    //找出要请求的动态  即本地没有缓存的动态
+                    for (int i = 0; i < dongtaiIDs.size(); ++i) {
+                        int id = dongtaiIDs.get(i);
+                        boolean flag = true;
+                        for (int j = 0; j < dongtais.size() && j < 6; ++j) {
+                            if (id == dongtais.get(j).getId()) {
+                                flag = false;
+                                //更新 点赞 评论 转发数量
+                                if (dongtaiPCTNums != null) {
+                                    for (int k = 0; k < dongtaiPCTNums.size(); ++k) {
+                                        if (dongtaiPCTNums.get(k).id == id) {
+                                            StaticAllList.personalDongtais.get(ph).get(j).setPranum(dongtaiPCTNums.get(k).pNum);
+                                            StaticAllList.personalDongtais.get(ph).get(j).setComnum(dongtaiPCTNums.get(k).cNum);
+                                            StaticAllList.personalDongtais.get(ph).get(j).setTransnum(dongtaiPCTNums.get(k).tNum);
+                                        }
+                                    }
+                                }
+
+                                break;
+                            }
+                        }
+                        if (flag) {
+                            need.add(id);
+
+                        }
+                    }
+
+                    for (int i = 0; i < delete.size(); ++i) {
+                        int index = delete.get(i);
+                        StaticAllList.personalDongtais.get(ph).remove(index);
+                    }
+
+                    DongtaiUploadThread dongtaiUploadThread = new DongtaiUploadThread("gUsDtByDTID", need);
+                    dongtaiUploadThread.start();
+
+                }
+
+
+//                Intent intent = new Intent("thefirstchange.example.com.communicationtext.MAIN");
+//                intent.putExtra("rs", "ok");
+//                intent.putExtra("type", "getnewDongtaiIDsResult");
+//                sendCast(intent);
+              //进入某用户的资料界面        用户上拉刷新动态的页面  就是请求新的动态
+            //服务器收到返回动态的id     否则客户端超时  就提示刷新失败
+        }else if(name.startsWith("gUsODtIDsRs")) {
+
+                if (name.split(" ").length < 2) {
+                    return;
+                }
+                String msgbody2 = name.split(" ")[1];
+                JSONObject jsonObject = new JSONObject(msgbody2);
+                String ph = jsonObject.getString("ph");
+
+
+                Vector<DongtaiPCTNum> dongtaiPCTNums = new Gson().fromJson(msgbody, new TypeToken<Vector<DongtaiPCTNum>>() {
+                }.getType());
+                Vector<Integer> dongtaiIDs = new Vector<>();
+                if (dongtaiPCTNums != null) {
+                    for (int i = 0; i < dongtaiPCTNums.size(); ++i) {
+                        dongtaiIDs.add(dongtaiPCTNums.get(i).id);
+                    }
+                }
+
+                Vector<Dongtai> dongtais = new Vector<>();
+                if (StaticAllList.personalDongtais.containsKey(ph)) {
+//                    StaticAllList.personalDongtais.put(ph, new Vector<Dongtai>());
+                    dongtais = StaticAllList.personalDongtais.get(ph);
+                }
+
+
+
+                Vector<Integer> need = new Vector<>();
+                Vector<Integer> delete = new Vector<>();
+                if (dongtaiIDs != null && dongtaiIDs.size() > 1) {
+                    int dongtaiid = dongtaiIDs.get(dongtaiIDs.size() - 1);
+                    int minid = dongtaiIDs.get(dongtaiIDs.size() - 2);
+                    int index = -1;
+                    for (int i = 0; i < dongtais.size(); ++i) {
+                        if (dongtais.get(i).getId() == dongtaiid) {
+                            index = i;
+                        }
+                    }
+                    //找出被用户删除的动态
+                    for (int i = index + 1; index != -1 && i < dongtais.size() && i < index + 7; ++i) {
+                        int id = dongtais.get(i).getId();
+                        if (id > minid) {
+                            boolean flag = true;
+                            for (int j = 0; j < dongtaiIDs.size(); ++j) {
+                                if (id == dongtaiIDs.get(j)) {
+                                    flag = false;
+                                    break;
+                                }
+                            }
+                            if (flag) {
+                                delete.add(i);
+                            }
+                        }
+                    }
+
+                    //找出要请求的动态  即本地没有缓存的动态
+                    for (int i = 0; i < dongtaiIDs.size(); ++i) {
+                        int id = dongtaiIDs.get(i);
+                        boolean flag = true;
+                        for (int j = 0; j < dongtais.size(); ++j) {
+                            if (id == dongtais.get(j).getId()) {
+                                flag = false;
+
+                                //更新 点赞 评论 转发数量
+                                if (dongtaiPCTNums != null) {
+                                    for (int k = 0; k < dongtaiPCTNums.size(); ++k) {
+                                        if (dongtaiPCTNums.get(k).id == id) {
+                                            StaticAllList.personalDongtais.get(ph).get(j).setPranum(dongtaiPCTNums.get(k).pNum);
+                                            StaticAllList.personalDongtais.get(ph).get(j).setComnum(dongtaiPCTNums.get(k).cNum);
+                                            StaticAllList.personalDongtais.get(ph).get(j).setTransnum(dongtaiPCTNums.get(k).tNum);
+                                        }
+                                    }
+                                }
+
+                                break;
+                            }
+                        }
+                        if (flag) {
+                            need.add(id);
+                        }
+                    }
+
+                    for (int i = 0; i < delete.size(); ++i) {
+                        int index2 = delete.get(i);
+                        StaticAllList.personalDongtais.get(ph).remove(index2);
+
+                    }
+                    DongtaiUploadThread dongtaiUploadThread = new DongtaiUploadThread("gUsDtByDTID", need);
+                    dongtaiUploadThread.start();
+
+
+                }
+                String type = "gUsODtIDsRs";
+                Intent intent2 = new Intent("thefirstchange.example.com.communicationtext.FRAGMENT_TWO");
+                intent2.putExtra("type", type);
+                int size = 0;
+                if (dongtaiIDs != null) {
+                    size = dongtaiIDs.size();
+                }
+                intent2.putExtra("size", size);
+                sendCast(intent2);
+
+//                Intent intent = new Intent("thefirstchange.example.com.communicationtext.MAIN");
+//                intent.putExtra("rs", "ok");
+//                intent.putExtra("type", type);
+//                sendCast(intent);
+
+
+             //进入某用户资料界面   用户刷新动态的页面  就是请求新的动态    返回动态基本信息   不包括图片
+        }else if(name.equals("gUsDtByDTIDRs")) {
+
+            Dongtai dongtai = new Gson().fromJson(msgbody, new TypeToken<Dongtai>() {}.getType());
+                String ph = "";
+
+                if(dongtai!=null){
+                 ph = dongtai.getSdid();
+
+                }
+
+
+            dongtai.setImph(new Vector<String>());
+
+//                boolean rs = StaticAllList.personalDongtais.containsKey(ph);
+
+            if (!StaticAllList.personalDongtais.containsKey(ph)||StaticAllList.personalDongtais.get(ph).size()==0) {
+//                Vector<Dongtai> dongtais1 = new Vector<>();
+//                dongtais1.add(dongtai);
+                StaticAllList.personalDongtais.get(ph).add(dongtai);
+            } else if (StaticAllList.personalDongtais.get(ph).get(0).getId() < dongtai.getId()) {
+                StaticAllList.personalDongtais.get(ph).add(0, dongtai);
+            } else if (StaticAllList.personalDongtais.get(ph).get(0).getId() >= dongtai.getId()) {
+                int index = -1;
+                boolean flag = false;
+                for (int i = 0; i < StaticAllList.personalDongtais.get(ph).size(); ++i) {
+                    if (StaticAllList.personalDongtais.get(ph).get(i).getId() == dongtai.getId()) {
+                        index = i;
+                        flag = true;
+                        break;
+                    }
+                    if (StaticAllList.personalDongtais.get(ph).get(i).getId() < dongtai.getId()) {
+                        index = i;
+                    }
+                }
+                if (flag) {
+                    StaticAllList.personalDongtais.get(ph).remove(index);
+                }
+                if (index != -1) {
+                    StaticAllList.personalDongtais.get(ph).add(index, dongtai);
+                } else {
+                    StaticAllList.personalDongtais.get(ph).add(dongtai);
+                }
+            }
+
+            Intent intent = new Intent("thefirstchange.example.com.communicationtext.FRAGMENT_TWO");
+            intent.putExtra("type", "gUsDtByDTIDRs");
+            sendCast(intent);
+
+
+
+          //进入某用户的资料界面    刷新动态的页面  就是请求新的动态   返回动态的图片
+            }else if(name.startsWith("gUsDtByDTIDImRs")){
+            if(name.split(" ").length<2) {
+                return;
+            }
+            String ss = name;
+            String msgbody2 = name.split(" ")[1];
+            JSONObject jsonObject = new JSONObject(msgbody2);
+            int dongtaiid = jsonObject.getInt("id");
+            String ph = jsonObject.getString("ph");
+
+            //从动态列表中找到对应的动态id   把图片路径保存进去
+            String path  = Config.dongtaipath+"/"+UUID.randomUUID().toString()+".jpg";
+            byte[] bs3 = Base64.decode(bs2,Base64.DEFAULT);
+            OutputStream out = new FileOutputStream(path);
+            InputStream is = new ByteArrayInputStream(bs3);
+            byte[] buff = new byte[1024];
+            int len = 0;
+            while((len=is.read(buff))!=-1){
+                out.write(buff, 0, len);
+            }
+            is.close();
+            out.close();
+
+            if(!StaticAllList.personalDongtais.containsKey(ph)){
+                StaticAllList.personalDongtais.put(ph,new Vector<Dongtai>());
+            }
+
+            for(int i=0;i<StaticAllList.personalDongtais.get(ph).size();++i){
+                if(StaticAllList.personalDongtais.get(ph).get(i).getId()==dongtaiid){
+                    StaticAllList.personalDongtais.get(ph).get(i).getImph().add(path);
+                    break;
+                }
+            }
+
+            Intent intent=new Intent("thefirstchange.example.com.communicationtext.FRAGMENT_TWO");
+            intent.putExtra("type","gUsDtByDTIDImRs");
+            sendCast(intent);
+        }
+
+
+
+
+
+
+
+
+        //用户下拉刷新动态的页面  就是请求新的动态      服务器收到返回动态的id     否则客户端超时  就提示刷新失败
+            else if(name.equals("getnewDongtaiIDsResult")){
+
+                Vector<DongtaiPCTNum> dongtaiPCTNums = new Gson().fromJson(msgbody,new TypeToken< Vector<DongtaiPCTNum>>(){}.getType());
+                Vector<Integer> dongtaiIDs = new Vector<>();
+                if(dongtaiPCTNums!=null){
+                    for(int i=0;i<dongtaiPCTNums.size();++i){
+                        dongtaiIDs.add(dongtaiPCTNums.get(i).id);
+                    }
+                }
+
+                Vector<Integer> need = new Vector<>();
+                Vector<Integer> delete = new Vector<>();
+                if(dongtaiIDs!=null&&dongtaiIDs.size()!=0){
+                    int minid = dongtaiIDs.get(dongtaiIDs.size()-1);
+
+                    //找出被动态主人删除的动态
+                    for(int i=0;i<StaticAllList.dongtais.size()&&i<6;++i){
+                        int id = StaticAllList.dongtais.get(i).getId();
+                        if(id>minid){
+                            boolean flag = true;
+                            for(int j=0;j<dongtaiIDs.size();++j){
+                                if(id==dongtaiIDs.get(j)){
+                                    flag = false;
+                                    break;
+                                }
+                            }
+                            if(flag){
+                                delete.add(i);
+                            }
+                        }
+                    }
+
+                    //找出要请求的动态  即本地没有缓存的动态
+                    for(int i=0;i<dongtaiIDs.size();++i){
+                        int id = dongtaiIDs.get(i);
+                        boolean flag = true;
+                        for(int j=0;j<StaticAllList.dongtais.size()&&j<6;++j){
+                            if(id==StaticAllList.dongtais.get(j).getId()){
+                                flag = false;
+                                //更新 点赞 评论 转发数量
+                                if(dongtaiPCTNums!=null) {
+                                    for (int k = 0; k < dongtaiPCTNums.size(); ++k) {
+                                        if(dongtaiPCTNums.get(k).id==id){
+                                            StaticAllList.dongtais.get(j).setPranum(dongtaiPCTNums.get(k).pNum);
+                                            StaticAllList.dongtais.get(j).setComnum(dongtaiPCTNums.get(k).cNum);
+                                            StaticAllList.dongtais.get(j).setTransnum(dongtaiPCTNums.get(k).tNum);
+                                        }
+                                    }
+                                }
+
+                                break;
+                            }
+                        }
+                        if(flag){
+                            need.add(id);
+                        }
+                    }
+
+                    for(int i=0;i<delete.size();++i){
+                        int index = delete.get(i);
+                        StaticAllList.dongtais.remove(index);
+                    }
+
+                    DongtaiUploadThread dongtaiUploadThread = new DongtaiUploadThread("getDongtaiByDTID",need);
+                    dongtaiUploadThread.start();
+
+                }
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.LIFESHOWFRAGMENT");
+                intent2.putExtra("type","getnewDongtaiIDsResult");
+                sendCast(intent2);
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.MAIN");
+                intent.putExtra("rs","ok");
+                intent.putExtra("type","getnewDongtaiIDsResult");
+                sendCast(intent);
+
+            //用户上拉刷新动态的页面  就是请求旧的动态      服务器收到回动态的id  否则客户端超时  就提示刷新失败    最后一条是客户端上拉刷新最底部的动态的id
+        }else if(name.equals("getoldDongtaiIDsResult")){
+
+                Vector<DongtaiPCTNum> dongtaiPCTNums = new Gson().fromJson(msgbody,new TypeToken< Vector<DongtaiPCTNum>>(){}.getType());
+                Vector<Integer> dongtaiIDs = new Vector<>();
+                if(dongtaiPCTNums!=null){
+                    for(int i=0;i<dongtaiPCTNums.size();++i){
+                        dongtaiIDs.add(dongtaiPCTNums.get(i).id);
+                    }
+                }
+                Vector<Integer> need = new Vector<>();
+                Vector<Integer> delete = new Vector<>();
+                if(dongtaiIDs!=null&&dongtaiIDs.size()>1){
+                    int dongtaiid = dongtaiIDs.get(dongtaiIDs.size()-1);
+                    int minid = dongtaiIDs.get(dongtaiIDs.size()-2);
+                    int index = -1;
+                    for(int i=0;i<StaticAllList.dongtais.size();++i){
+                        if(StaticAllList.dongtais.get(i).getId()==dongtaiid){
+                            index = i;
+                        }
+                    }
+                    //找出被用户删除的动态
+                    for(int i=index+1;index!=-1&&i<StaticAllList.dongtais.size()&&i<index+7;++i){
+                        int id = StaticAllList.dongtais.get(i).getId();
+                        if(id>minid){
+                            boolean flag = true;
+                            for(int j=0;j<dongtaiIDs.size();++j){
+                                if(id==dongtaiIDs.get(j)){
+                                    flag = false;
+                                    break;
+                                }
+                            }
+                            if(flag){
+                                delete.add(i);
+                            }
+                        }
+                    }
+
+                    //找出要请求的动态  即本地没有缓存的动态
+                    for(int i=0;i<dongtaiIDs.size();++i){
+                        int id = dongtaiIDs.get(i);
+                        boolean flag = true;
+                        for(int j=0;j<StaticAllList.dongtais.size();++j){
+                            if(id==StaticAllList.dongtais.get(j).getId()){
+                                flag = false;
+
+                                //更新 点赞 评论 转发数量
+                                if(dongtaiPCTNums!=null) {
+                                    for (int k = 0; k < dongtaiPCTNums.size(); ++k) {
+                                        if(dongtaiPCTNums.get(k).id==id){
+                                            StaticAllList.dongtais.get(j).setPranum(dongtaiPCTNums.get(k).pNum);
+                                            StaticAllList.dongtais.get(j).setComnum(dongtaiPCTNums.get(k).cNum);
+                                            StaticAllList.dongtais.get(j).setTransnum(dongtaiPCTNums.get(k).tNum);
+                                        }
+                                    }
+                                }
+
+                                break;
+                            }
+                        }
+                        if(flag){
+                            need.add(id);
+                        }
+                    }
+
+                    for(int i=0;i<delete.size();++i){
+                        int index2 = delete.get(i);
+                        StaticAllList.dongtais.remove(index2);
+
+                    }
+                        DongtaiUploadThread dongtaiUploadThread = new DongtaiUploadThread("getDongtaiByDTID",need);
+                        dongtaiUploadThread.start();
+
+
+                }
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.LIFESHOWFRAGMENT");
+                intent2.putExtra("type","getoldDongtaiIDsResult");
+                int size = 0;
+                if(dongtaiIDs!=null){
+                    size = dongtaiIDs.size();
+                }
+                intent2.putExtra("size",size);
+                sendCast(intent2);
+
+                String type = "getoldDongtaiIDsResult";
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.MAIN");
+                intent.putExtra("rs","ok");
+                intent.putExtra("type",type);
+                sendCast(intent);
+
+                //用户刷新动态的页面  就是请求新的动态    返回动态基本信息   不包括图片
+        }else if(name.equals("getDtByDTIDRs")){
+            Dongtai dongtai = new Gson().fromJson(msgbody,new TypeToken<Dongtai>(){}.getType());
+            dongtai.setImph(new Vector<String>());
+            if(StaticAllList.dongtais.size()==0){
+                StaticAllList.dongtais.add(dongtai);
+            }else if(StaticAllList.dongtais.get(0).getId()<dongtai.getId()){
+                StaticAllList.dongtais.add(0,dongtai);
+            }else if(StaticAllList.dongtais.get(0).getId()>=dongtai.getId()){
+                int index = -1;
+                boolean flag = false;
+                for(int i=0;i<StaticAllList.dongtais.size();++i){
+                    if(StaticAllList.dongtais.get(i).getId()==dongtai.getId()){
+                        index = i;
+                        flag = true;
+                        break;
+                    }
+                    if(StaticAllList.dongtais.get(i).getId()<dongtai.getId()){
+                        index = i;
+                    }
+                }
+                if(flag){
+                    StaticAllList.dongtais.remove(index);
+                }
+                if(index!=-1){
+                    StaticAllList.dongtais.add(index,dongtai);
+                }else{
+                    StaticAllList.dongtais.add(dongtai);
+                }
+            }
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.LIFESHOWFRAGMENT");
+                intent.putExtra("type","getDtByDTIDRs");
+                sendCast(intent);
+
+                //用户刷新动态的页面  就是请求新的动态   返回动态的主人的头像
+        }else if(name.startsWith("getDtByDTIDIcRs")) {
+
+                    if (name.split(" ").length < 2) {
+                        return;
+                    }
+                    String s = name;
+                    String msgbody2 = name.split(" ")[1];
+                    JSONObject jsonObject = new JSONObject(msgbody2);
+                    int dongtaiid = jsonObject.getInt("id");
+
+                //从动态列表中找到对应的动态id   把图片路径保存进去
+                String path  = Config.DtIcpath+"/"+UUID.randomUUID().toString()+".jpg";
+               // byte[] bs3 = Base64.decode(bs2,Base64.DEFAULT);
+                OutputStream out = new FileOutputStream(path);
+                InputStream is = new ByteArrayInputStream(bs2);
+                byte[] buff = new byte[1024];
+                int len = 0;
+                while((len=is.read(buff))!=-1){
+                    out.write(buff, 0, len);
+                }
+                is.close();
+                out.close();
+                for(int i=0;i<StaticAllList.dongtais.size();++i){
+                    if(StaticAllList.dongtais.get(i).getId()==dongtaiid){
+                        StaticAllList.dongtais.get(i).setSdic(path);
+                        break;
+                    }
+                }
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.LIFESHOWFRAGMENT");
+                intent.putExtra("type","getDtByDTIDIcRs");
+                sendCast(intent);
+
+                //用户刷新动态的页面  就是请求新的动态   返回动态的图片
+            }else if(name.startsWith("getDtByDTIDImRs")){
+            if(name.split(" ").length<2) {
+                return;
+            }
+            String s = name;
+            String msgbody2 = name.split(" ")[1];
+            JSONObject jsonObject = new JSONObject(msgbody2);
+            int dongtaiid = jsonObject.getInt("id");
+
+            //从动态列表中找到对应的动态id   把图片路径保存进去
+                String path  = Config.dongtaipath+"/"+UUID.randomUUID().toString()+".jpg";
+                byte[] bs3 = Base64.decode(bs2,Base64.DEFAULT);
+                OutputStream out = new FileOutputStream(path);
+                InputStream is = new ByteArrayInputStream(bs3);
+                byte[] buff = new byte[1024];
+                int len = 0;
+                while((len=is.read(buff))!=-1){
+                    out.write(buff, 0, len);
+                }
+                is.close();
+                out.close();
+                for(int i=0;i<StaticAllList.dongtais.size();++i){
+                    if(StaticAllList.dongtais.get(i).getId()==dongtaiid){
+                        StaticAllList.dongtais.get(i).getImph().add(path);
+                        break;
+                    }
+                }
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.LIFESHOWFRAGMENT");
+                intent.putExtra("type","getDtByDTIDImRs");
+                sendCast(intent);
+
+
+
+              //刷新动态消息的页面  就是请求新的动态消息      服务器收到返回动态消息的id
+        } else if(name.equals("getnewDongtaiMsgIDsResult")) {
+                Vector<Integer> dongtaiMsgIDs = new Gson().fromJson(msgbody, new TypeToken<Vector<Integer>>() {}.getType());
+                Vector<Integer> need = new Vector<>();
+                Vector<Integer> delete = new Vector<>();
+                if (dongtaiMsgIDs != null) {
+                    int minid = dongtaiMsgIDs.get(dongtaiMsgIDs.size() - 1);
+
+                    //找出被动态消息主人删除的动态消息
+                    for (int i = 0; i < StaticAllList.dongtaiMsgs.size() && i < 8; ++i) {
+                        int id = StaticAllList.dongtaiMsgs.get(i).getMsgid();
+                        if (id > minid) {
+                            boolean flag = true;
+                            for (int j = 0; j < dongtaiMsgIDs.size(); ++j) {
+                                if (id == dongtaiMsgIDs.get(j)) {
+                                    flag = false;
+                                    break;
+                                }
+                            }
+                            if (flag) {
+                                delete.add(i);
+                            }
+                        }
+                    }
+
+                    //找出要请求的动态  即本地没有缓存的动态    只看前6条    每次刷新最多请求6条
+                    for (int i = 0; i < dongtaiMsgIDs.size(); ++i) {
+                        int id = dongtaiMsgIDs.get(i);
+                        boolean flag = true;
+                        for (int j = 0; j < StaticAllList.dongtaiMsgs.size() && j < 6; ++j) {
+                            if (id == StaticAllList.dongtaiMsgs.get(j).getMsgid()) {
+                                flag = false;
+                            }
+                        }
+                        if (flag) {
+                            need.add(id);
+                        }
+                    }
+
+                    for (int i = 0; i < delete.size(); ++i) {
+                        int index = delete.get(i);
+                        StaticAllList.dongtaiMsgs.remove(index);
+                    }
+
+
+                    DongtaiUploadThread dongtaiUploadThread = new DongtaiUploadThread("getDTMsgById", need);
+                    dongtaiUploadThread.start();
+
+                    Set<Integer> set = new HashSet<>();    //本地没有缓存的动态消息的动态的内容
+                    for(int j=0;j<need.size();++j){
+                        int DTmsgid = need.get(j);
+
+                        for(int i=0;i<StaticAllList.dongtaiMsgs.size();++i){
+                            if(DTmsgid>StaticAllList.dongtaiMsgs.get(i).getMsgid()){
+                                break;
+                            }
+                            if(DTmsgid==StaticAllList.dongtaiMsgs.get(i).getMsgid()){
+                                int DTid = StaticAllList.dongtaiMsgs.get(i).getDongtaiid();
+                                boolean flag = true;
+                                for(int k=0;k<StaticAllList.dongtaisMsgDongtai.size();++k){
+                                    if(DTid==StaticAllList.dongtaisMsgDongtai.get(k).getId()){
+                                        flag = false;
+                                    }
+                                }
+                                if(flag){
+                                    set.add(DTid);
+                                }
+                            }
+                        }
+                    }
+
+                    Vector<Integer> vector = new Vector<>();
+                   for(Integer integer:set){
+                       vector.add(integer);
+                   }
+
+                    DongtaiUploadThread dongtaiUploadThread2 = new DongtaiUploadThread("getDTFirstImAndtextById", vector);
+                    dongtaiUploadThread2.start();
+
+                }
+
+
+            //用户上拉刷新动态消息的页面  就是请求旧的动态消息      服务器收到返回动态消息的id    否则客户端超时  就提示刷新失败
+        }else if(name.equals("getoldDongtaiMsgIDsResult")) {
+
+                Vector<Integer> dongtaiIDs = new Gson().fromJson(msgbody, new TypeToken<Vector<Integer>>() {}.getType());
+                Vector<Integer> need = new Vector<>();
+                Vector<Integer> delete = new Vector<>();
+                if (dongtaiIDs != null) {
+                    int minid = dongtaiIDs.get(dongtaiIDs.size() - 1);
+
+                    //找出被用户删除的动态
+                    for (int i = 0; i < StaticAllList.dongtaiMsgs.size() && i < 8; ++i) {
+                        int id = StaticAllList.dongtaiMsgs.get(i).getMsgid();
+                        if (id > minid) {
+                            boolean flag = true;
+                            for (int j = 0; j < dongtaiIDs.size(); ++j) {
+                                if (id == dongtaiIDs.get(j)) {
+                                    flag = false;
+                                    break;
+                                }
+                            }
+                            if (flag) {
+                                delete.add(i);
+                            }
+                        }
+                    }
+
+                    //找出要请求的动态  即本地没有缓存的动态
+                    for (int i = 0; i < dongtaiIDs.size(); ++i) {
+                        int id = dongtaiIDs.get(i);
+                        boolean flag = true;
+                        for (int j = 0; j < StaticAllList.dongtaiMsgs.size() && j < 6; ++j) {
+                            if (id == StaticAllList.dongtaiMsgs.get(j).getMsgid()) {
+                                flag = false;
+                            }
+                        }
+                        if (flag) {
+                            need.add(id);
+                        }
+                    }
+
+                    for (int i = 0; i < delete.size(); ++i) {
+                        int index = delete.get(i);
+                        StaticAllList.dongtaiMsgs.remove(index);
+                    }
+
+
+                    DongtaiUploadThread dongtaiUploadThread = new DongtaiUploadThread("getDTMsgById", need);
+                    dongtaiUploadThread.start();
+
+                    Set<Integer> set = new HashSet<>();    //本地没有缓存的动态消息的动态的内容
+                    for(int j=0;j<need.size();++j){
+                        int DTmsgid = need.get(j);
+
+                        for(int i=0;i<StaticAllList.dongtaiMsgs.size();++i){
+                            if(DTmsgid>StaticAllList.dongtaiMsgs.get(i).getMsgid()){
+                                break;
+                            }
+                            if(DTmsgid==StaticAllList.dongtaiMsgs.get(i).getMsgid()){
+                                int DTid = StaticAllList.dongtaiMsgs.get(i).getDongtaiid();
+                                boolean flag = true;
+                                for(int k=0;k<StaticAllList.dongtaisMsgDongtai.size();++k){
+                                    if(DTid==StaticAllList.dongtaisMsgDongtai.get(k).getId()){
+                                        flag = false;
+                                    }
+                                }
+                                if(flag){
+                                    set.add(DTid);
+                                }
+                            }
+                        }
+                    }
+
+                    Vector<Integer> vector = new Vector<>();
+                    for(Integer integer:set){
+                        vector.add(integer);
+                    }
+
+                    DongtaiUploadThread dongtaiUploadThread2 = new DongtaiUploadThread("getDTFirstImAndtextById", vector);
+                    dongtaiUploadThread2.start();
+
+                }
+
+                Intent intent2 = new Intent("thefirstchange.example.com.communicationtext.LIFESHOWNOTIFICATION");
+                intent2.putExtra("type", "getoldDongtaiMsgIDsResult");
+                sendCast(intent2);
+
+                String type = "getoldDongtaiIDsResult";
+                Intent intent = new Intent("thefirstchange.example.com.communicationtext.MAIN");
+                intent.putExtra("rs", "ok");
+                intent.putExtra("type", type);
+                sendCast(intent);
+
+
+                //用户刷新动态消息的页面  就是请求新的动态消息    返回动态消息
+        }else if(name.equals("getDTMsgByIdResult")){
+
+                JSONObject jsonObject = new JSONObject(msgbody);
+                DongtaiMsg dongtai = new DongtaiMsg();
+                int DTMsgId = jsonObject.getInt("DTMsgId");
+                int DTId = jsonObject.getInt("DTId");
+                String userid = jsonObject.getString("DTId");
+                String username = jsonObject.getString("username");
+//                String usericonpath = jsonObject.getString("usericonpath");
+                String type = jsonObject.getString("type");
+                dongtai.setMsgid(DTMsgId);
+                dongtai.setDongtaiid(DTId);
+                dongtai.setUserid(userid);
+//                dongtai.setUsericon(usericonpath);
+                dongtai.setUsername(username);
+                dongtai.setType(type);
+
+                if(type.equals("praise")){
+
+                }else if(type.equals("transmit")){
+
+                }else if(type.equals("todongtai")){
+                    String content =  jsonObject.getString("content");
+                    dongtai.setMsg(content);
+                }else if(type.equals("tocomment")){
+                    String content =  jsonObject.getString("content");
+                    int beComId = jsonObject.getInt("beComId");
+                    String beComUSerid = jsonObject.getString("beComUSerid");
+                    String beComUsername = jsonObject.getString("beComUsername");
+
+                    dongtai.setMsg(content); dongtai.setCommentid(beComId);
+                    dongtai.setBecommenteduserid(beComUSerid);
+                    dongtai.setBecommentedusername(beComUsername);
+
+                }
+
+
+
+            if(StaticAllList.dongtaiMsgs.size()==0){
+                StaticAllList.dongtaiMsgs.add(dongtai);
+            }else if(StaticAllList.dongtaiMsgs.get(0).getMsgid()<dongtai.getMsgid()){
+                StaticAllList.dongtaiMsgs.add(0,dongtai);
+            }else if(StaticAllList.dongtaiMsgs.get(0).getMsgid()>=dongtai.getMsgid()){
+                int index = -1;
+                boolean flag = false;
+                for(int i=0;i<StaticAllList.dongtaiMsgs.size();++i){
+                    if(StaticAllList.dongtaiMsgs.get(i).getMsgid()==dongtai.getMsgid()){
+                        index = i;
+                        flag = true;
+                        break;
+                    }
+                    if(StaticAllList.dongtaiMsgs.get(i).getMsgid()<dongtai.getMsgid()){
+                        index = i;
+                    }
+                }
+                if(flag){
+                    StaticAllList.dongtaiMsgs.remove(index);
+                }
+                if(index!=-1){
+                    StaticAllList.dongtaiMsgs.add(index,dongtai);
+                }else{
+                    StaticAllList.dongtaiMsgs.add(dongtai);
+                }
+            }
+            Intent intent=new Intent("thefirstchange.example.com.communicationtext.LIFESHOWNOTIFICATION");
+            intent.putExtra("type","getDTMsgByIdResult");
+            sendCast(intent);
+
+            //用户刷新动态消息的页面        返回动态消息的发送者的头像
+        }else if(name.startsWith("getDTMsgUserIcRs")){
+                if (name.split(" ").length < 2) {
+                    return;
+                }
+
+                String msgbody2 = name.split(" ")[1];
+                JSONObject jsonObject = new JSONObject(msgbody2);
+                int DTMsgId = jsonObject.getInt("DTMsgId");
+
+                //从动态列表中找到对应的动态id   把图片路径保存进去
+                String path  = Config.DtIcpath+"/"+UUID.randomUUID().toString()+".jpg";
+                byte[] bs3 = Base64.decode(bs2,Base64.DEFAULT);
+                OutputStream out = new FileOutputStream(path);
+                InputStream is = new ByteArrayInputStream(bs3);
+                byte[] buff = new byte[1024];
+                int len = 0;
+                while((len=is.read(buff))!=-1){
+                    out.write(buff, 0, len);
+                }
+                is.close();
+                out.close();
+                for(int i=0;i<StaticAllList.dongtaiMsgs.size();++i){
+                    if(StaticAllList.dongtaiMsgs.get(i).getMsgid()==DTMsgId){
+                        StaticAllList.dongtaiMsgs.get(i).setUsericon(path);
+                        break;
+                    }
+                }
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.LIFESHOWNOTIFICATION");
+                intent.putExtra("type","getDTMsgUserIcRs");
+                sendCast(intent);
+            }
+
+            //用户刷新动态消息的页面        返回动态消息的动态的第一张图片和内容
+        else if(name.startsWith("getDTFirstImAndtextById")) {
+//                String json2 = "{\"type\":\"content\",\"dtid\":\""+dtid+"\",\"userid\":\""+userid+"\",\"username\":\""+username+"\",\"content\":\""+content+"\"}";
+//                String jString = "{\"type\":\"image\",\"dtid\":\""+dongtai.getId()+"\"}";
+                if (name.split(" ").length < 2) {
+                    return;
+                }
+                String s = name;
+                String msgbody2 = name.split(" ")[1];
+                JSONObject jsonObject = new JSONObject(msgbody2);
+
+                int dongtaiid = jsonObject.getInt("dtid");
+                String type = jsonObject.getString("type");
+                if(type.equals("content")){
+
+                    String userid = jsonObject.getString("userid");
+                    String username = jsonObject.getString("username");
+                    String content = jsonObject.getString("content");
+                    Dongtai dongtai = new Dongtai();
+                    dongtai.setId(dongtaiid);
+                    dongtai.setSdid(userid);
+                    dongtai.setSdname(username);
+                    dongtai.setContent(content);
+
+                    StaticAllList.dongtaisMsgDongtai.add(dongtai);
+
+                }else{
+                    //从动态列表中找到对应的动态id   把图片路径保存进去
+                    String path = Config.dongtaipath + "/" + UUID.randomUUID().toString() + ".jpg";
+                    byte[] bs3 = Base64.decode(bs2, Base64.DEFAULT);
+                    OutputStream out = new FileOutputStream(path);
+                    InputStream is = new ByteArrayInputStream(bs3);
+                    byte[] buff = new byte[1024];
+                    int len = 0;
+                    while ((len = is.read(buff)) != -1) {
+                        out.write(buff, 0, len);
+                    }
+                    is.close();
+                    out.close();
+                    for (int i = 0; i < StaticAllList.dongtaisMsgDongtai.size(); ++i) {
+                        if (StaticAllList.dongtaisMsgDongtai.get(i).getId() == dongtaiid) {
+                            StaticAllList.dongtaisMsgDongtai.get(i).getImph().add(path);
+                            break;
+                        }
+                    }
+                }
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.LIFESHOWNOTIFICATION");
+                intent.putExtra("type","getDTFirstImAndtextById");
+                sendCast(intent);
+
+            }
+
+            //进入某动态的所有评论界面    刚开始要刷新   返回根评论总共10条   大的评论下最多回执3条
+            else if(name.startsWith("gNComByDTidRS")){
+                if (name.split(" ").length < 2) {
+                    return;
+                }
+                String s = name;
+                String msgbody2 = name.split(" ")[1];
+                JSONObject jsonObject = new JSONObject(msgbody2);
+
+                int dongtaiid = jsonObject.getInt("dtid");
+
+                final Vector<DTComRoot> dtComRoots = new Gson().fromJson(msgbody, new TypeToken<Vector<DTComRoot>>() {}.getType());
+                StaticAllList.dTComRootMap.clear();
+                StaticAllList.dTComRootMap.put(dongtaiid,dtComRoots);
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.COMMENTSHOW");
+                intent.putExtra("type","gNComByDTidRS");
+                sendCast(intent);
+
+                new Thread(){
+                    public void run(){
+                        for(int i=0;i<dtComRoots.size();++i){
+                            String uid = dtComRoots.get(i).getRootuid();
+                            SendToServer.getRtComUIC(uid);
+                        }
+                    }
+                }.start();
+
+
+            }
+
+            //进入某动态的所有评论界面    刚开始要刷新   返回根评论总共10条   大的评论下最多回执3条  获得头像
+            else if(name.startsWith("getRtComUIC")){
+                if (name.split(" ").length < 2) {
+                    return;
+                }
+                String s = name;
+                String msgbody2 = name.split(" ")[1];
+                JSONObject jsonObject = new JSONObject(msgbody2);
+
+                String ph = jsonObject.getString("ph");
+                for(int i:StaticAllList.dTComRootMap.keySet()){
+                    for(int j=0;j<StaticAllList.dTComRootMap.get(i).size();++j){
+                        if(StaticAllList.dTComRootMap.get(i).get(j).getRootuid().equals(ph)){
+                            StaticAllList.dTComRootMap.get(i).get(j).setRootuic(bs2);
+                        }
+                    }
+                }
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.COMMENTSHOW");
+                intent.putExtra("type","getRtComUIC");
+                sendCast(intent);
+
+            }
+
+            //进入某动态的所有评论界面    上拉刷新   返回根评论总共10条   大的评论下最多回执3条
+            else if(name.startsWith("gOComByDTidRs")){
+                if (name.split(" ").length < 2) {
+                    return;
+                }
+                String s = name;
+                String msgbody2 = name.split(" ")[1];
+                JSONObject jsonObject = new JSONObject(msgbody2);
+
+                int dongtaiid = jsonObject.getInt("dtid");
+
+                final Vector<DTComRoot> dtComRoots = new Gson().fromJson(msgbody, new TypeToken<Vector<DTComRoot>>() {}.getType());
+
+                if(!StaticAllList.dTComRootMap.containsKey(dongtaiid)){
+                    StaticAllList.dTComRootMap.put(dongtaiid,dtComRoots);
+                }else{
+                    for(int k=0;k<dtComRoots.size();++k){
+                        StaticAllList.dTComRootMap.get(dongtaiid).add(dtComRoots.get(k));
+                    }
+
+                }
+
+                new Thread(){
+                    public void run(){
+                        for(int i=0;i<dtComRoots.size();++i){
+                            String uid = dtComRoots.get(i).getRootuid();
+                            SendToServer.getRtComUIC(uid);
+                        }
+                    }
+                }.start();
+
+            }
+
+
+
+
+            //发表动态的基本信息是否成功
+        else if(name.equals("addDongtaiResult")){
+            JSONObject jsonObject = new JSONObject(msgbody);
+            String rs = jsonObject.getString("type");
+            int dongid = jsonObject.getInt("id");
+            String type = "addDongtaiResult";
+
+            if(rs.equals("ok")){
+
+                StaticAllList.nowDongtai.setId(dongid);
+                if(StaticAllList.nowDongtai.getImnum()!=0){
+
+                    DongtaiUploadThread dongtaiUploadThread = new DongtaiUploadThread("addDongtaiImage",new Vector<Integer>());
+                    dongtaiUploadThread.start();
+
+                //该动态没有图片  且发表成功  那么该动态发表成功    发表成功该动态不要加入到动态的列表
+                }else {
+                   // StaticAllList.dongtais.add(0,StaticAllList.nowDongtai);
+                    StaticAllList.dongtaiatate = "nodongtai";
+                    StaticAllList.dongtaiImageHasnotUpload=0;
+                    StaticAllList.nowDongtai = new Dongtai();
+                    //发表成功后  请求新的动态
+                    DongtaiUploadThread dongtaiUploadThread = new DongtaiUploadThread("getnewDongtaiIds",new Vector<Integer>());
+                    dongtaiUploadThread.start();
+
+                }
+
+
+            }else{
+                StaticAllList.dongtaiatate="failed";
+            }
+
+            Intent intent=new Intent("thefirstchange.example.com.communicationtext.MAIN");
+            intent.putExtra("type",type);
+                intent.putExtra("rs",rs);
+                intent.putExtra("dongtaiid",dongid);
+                sendCast(intent);
+
+            //用户发表动态时   图片分开传送  图片传输的 结果     发表成功该动态不要加入到动态的列表
+        }else if(name.equals("adddongtaiimageResult")){
+
+            JSONObject jsonObject = new JSONObject(msgbody);
+            String rs = jsonObject.getString("type");
+            int dongid = jsonObject.getInt("id");
+            String type = "adddongtaiimageResult";
+
+                if(rs.equals("ok")){
+                    if(StaticAllList.nowDongtai.getImnum()>StaticAllList.dongtaiImageHasnotUpload){
+//                        Intent intent = new Intent(this,DongtaiUploadService.class);
+//                        intent.putExtra("type","addDongtaiImage");
+//                        startService(intent);
+                        DongtaiUploadThread dongtaiUploadThread = new DongtaiUploadThread("addDongtaiImage",new Vector<Integer>());
+                        dongtaiUploadThread.start();
+                        //发表成功
+                    }else{
+                        //StaticAllList.dongtais.add(0,StaticAllList.nowDongtai);
+                        StaticAllList.dongtaiatate = "nodongtai";
+                        StaticAllList.dongtaiImageHasnotUpload=0;
+                        StaticAllList.nowDongtai = new Dongtai();
+
+                        DongtaiUploadThread dongtaiUploadThread = new DongtaiUploadThread("getnewDongtaiIds",new Vector<Integer>());
+                        dongtaiUploadThread.start();
+                    }
+                }else{
+                    StaticAllList.dongtaiatate="failed";
+                }
+
+//                Intent intent=new Intent("thefirstchange.example.com.communicationtext.EDITLIFESHOW");
+//                intent.putExtra("type",type);
+//                intent.putExtra("rs",rs);
+//                intent.putExtra("dongtaiid",dongid);
+//                sendCast(intent);
+        }
+
+        //给动态点赞是否成功
+        else if(name.equals("dongtaipraiseResult")){
+            JSONObject jsonObject = new JSONObject(msgbody);
+            String rs = jsonObject.getString("type");
+
+
+            //给动态评论是否成功
+        }else if(name.equals("dtComRs")){
+            JSONObject jsonObject = new JSONObject(msgbody);
+            String rs = jsonObject.getString("rs");
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.COMMENTSHOW");
+                intent2.putExtra("type","dtComRs");
+                intent2.putExtra("rs",rs);
+                sendCast(intent2);
+
+            //给动态的评论 评论 是否成功
+        }else if(name.equals("dongtaicommentCommentResult")){
+            JSONObject jsonObject = new JSONObject(msgbody);
+            String rs = jsonObject.getString("rs");
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.LIFESHOWFRAGMENT");
+                intent2.putExtra("type","dongtaicommentCommentResult");
+                intent2.putExtra("rs",rs);
+                sendCast(intent2);
+
+            //拿到自己的动态消息  一般是刚上线的时候
+        }else if(name.equals("getDongtaiMsgResult")){
+            MyMessageQueue.dongtaiMsgNotRead =  new Gson().fromJson(msgbody, new TypeToken<Vector<DongtaiMsg>>(){}.getType());
+
+
+            //某人给自己点赞
+        }else if(name.equals("userPraiseForyou")){
+//               JSONObject jsonObject = new JSONObject(msgbody);
+//               String ph = jsonObject.getString("ph");
+//                String icon = jsonObject.getString("usericonpath");
+//                MyMessageQueue.dongtaiMsgNotRead.put(ph,icon);
+//
+//                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.LIFESHOWFRAGMENT");
+//                intent2.putExtra("type","userPraiseForyou");
+//                intent2.putExtra("ph",ph);
+//                sendCast(intent2);
+
+                //某人给自己的动态评论
+            }else if(name.startsWith("UCmtFU")){
+                if (name.split(" ").length < 2) {
+                    return;
+                }
+                String s = name;
+                String msgbody2 = name.split(" ")[1];
+                JSONObject jsonObject = new JSONObject(msgbody2);
+
+                String ph = jsonObject.getString("ph");
+                int dtid = jsonObject.getInt("dtid");
+
+                for(int i=0;i<StaticAllList.dongtais.size();++i){
+                    if(StaticAllList.dongtais.get(i).getId()==dtid){
+                        StaticAllList.dongtais.get(i).setComnum(StaticAllList.dongtais.get(i).getComnum()+1);
+                        break;
+                    }
+                }
+
+//                String icon = jsonObject.getString("usericonpath");
+                Bitmap bitmap = BitmapFactory.decodeByteArray(bs2,0,bs2.length);
+                MyMessageQueue.dongtaiMsgNotRead.put(ph,bitmap);
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.LIFESHOWFRAGMENT");
+                intent2.putExtra("type","userCommentForyou");
+                intent2.putExtra("ph",ph);
+                sendCast(intent2);
+
+                //某人给自己对某动态的评论评论
+            } else if(name.equals("UCmtForYCmtOfDT")){
+//                JSONObject jsonObject = new JSONObject(msgbody);
+//                String ph = jsonObject.getString("ph");
+//                String icon = jsonObject.getString("usericonpath");
+//                MyMessageQueue.dongtaiMsgNotRead.put(ph,icon);
+//
+//                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.LIFESHOWFRAGMENT");
+//                intent2.putExtra("type","UCmtForYCmtOfDT");
+//                intent2.putExtra("ph",ph);
+//                sendCast(intent2);
+
+                //某人给自己的动态的某一条动态评论
+            }else if(name.equals("UCmtForYDTCmt")){
+//                JSONObject jsonObject = new JSONObject(msgbody);
+//                String ph = jsonObject.getString("ph");
+//                String icon = jsonObject.getString("usericonpath");
+//                MyMessageQueue.dongtaiMsgNotRead.put(ph,icon);
+//
+//                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.LIFESHOWFRAGMENT");
+//                intent2.putExtra("type","UCmtForYDTCmt");
+//                intent2.putExtra("ph",ph);
+//                sendCast(intent2);
+
+            }
+            //修改个人头像的结果
+            else if(name.equals("ChPerIcRs")){
+
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("rs");
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.PERSONALHOMEPAGE");
+                intent2.putExtra("type","ChPerIcRs");
+                intent2.putExtra("rs",rs);
+                sendCast(intent2);
+
+            }
+            //获得个人头像
+            else if(name.equals("getPerIcRs")){
+
+//                if (name.split(" ").length < 2) {
+//                    return;
+//                }
+//                String s = name;
+//                String msgbody2 = name.split(" ")[1];
+//                JSONObject jsonObject = new JSONObject(msgbody2);
+
+
+                    //从动态列表中找到对应的动态id   把图片路径保存进去
+                    String path = Config.usericonpath + "/" + ObjectService.personalInfo.getPhonenumber() + ".jpg";
+                    byte[] bs3 = Base64.decode(bs2, Base64.DEFAULT);
+                    OutputStream out = new FileOutputStream(path);
+                    InputStream is = new ByteArrayInputStream(bs3);
+                    byte[] buff = new byte[1024];
+                    int len = 0;
+                    while ((len = is.read(buff)) != -1) {
+                        out.write(buff, 0, len);
+                    }
+                    is.close();
+                    out.close();
+
+
+//                Intent intent=new Intent("thefirstchange.example.com.communicationtext.LIFESHOWNOTIFICATION");
+//                intent.putExtra("type","getDTFirstImAndtextById");
+//                sendCast(intent);
+
+
+            }
+
+
+            //拿到个人信息
+         else if(name.equals("getPersonalInfoResult")) {
+
+
+                PersonalInfo personalInfo = new Gson().fromJson(msgbody, new TypeToken<PersonalInfo>() {
+                }.getType());
+
+                if(personalInfo!=null){
+                    String ph = ObjectService.personalInfo.getPhonenumber();
+                    String icon = ObjectService.personalInfo.getIcon();
+                    ObjectService.personalInfo = personalInfo;
+
+                    Calendar c = Calendar.getInstance();
+                    int year =  c.get(Calendar.YEAR) ;  //获取当前年
+                    int month =  c.get(Calendar.MONTH)+1;// 获取当前月
+                    int xueqi = 1;
+                    if(month>=9&&month<=12||month>=1&&month<=2){
+                        xueqi = 1;
+                    }else{
+                        year--;
+                        xueqi = 2;
+                    }
+
+                    int grade = year-ObjectService.personalInfo.getRuxueyear()+1;
+
+                    ObjectService.personalInfo.setGrade(grade);
+                    ObjectService.personalInfo.setXueqi(xueqi);
+
+                    if(ph.equals(personalInfo.getPhonenumber())&&(personalInfo.getIcon()==null||personalInfo.getIcon().equals(""))){
+                        ObjectService.personalInfo.setIcon(icon);
+                    }
+
+                }else{
+                    return;
+                }
+
+                SharedPreferences sh = getSharedPreferences( Config.sharedPreferences_personal_info,Context.MODE_PRIVATE);
+
+                Gson gson = new Gson();
+                String json = gson.toJson(personalInfo);
+                SharedPreferences.Editor editor = sh.edit() ;
+                editor.putString(Config.sharedPreferences_personal_info, json) ; //存入json串
+                editor.commit() ; //提交
+
+//                PersonalInfo.setPhonenumber(userGroup.getPhonenumber());
+//                PersonalInfo.setAddress(userGroup.getAddress());
+//                PersonalInfo.setCorporationname(userGroup.getCorporationname());
+//                PersonalInfo.setCorporationposition(userGroup.getCorporationposition());
+//                PersonalInfo.setDepartmentname(userGroup.getDepartmentname());
+//                PersonalInfo.setIcon(userGroup.getIcon());
+//                PersonalInfo.setMajorname(userGroup.getMajorname());
+//                PersonalInfo.setNickname(userGroup.getNickname());
+//                PersonalInfo.setPassword(userGroup.getPassword());
+//                PersonalInfo.setQq(userGroup.getQq());
+//                PersonalInfo.setSchoolname(userGroup.getSchoolname());
+//                PersonalInfo.setSex(userGroup.getSex());
+//                PersonalInfo.setWeixin(userGroup.getWeixin());
+//                PersonalInfo.setIcon(userGroup.getIntroduce());
+//                PersonalInfo.setBirthday(userGroup.getBirthday());
+//                PersonalInfo.setRuxueyear(userGroup.getRuxueyear());
+//                PersonalInfo.setFrom(userGroup.getFrom());
+//                PersonalInfo.setIntroduce(userGroup.getIntroduce());
+//                PersonalInfo.setType(userGroup.getType());
+//
+//                SharedPreferences mSharedPreferences = getSharedPreferences(Config.sharedPreferences_personal_info, Context.MODE_PRIVATE);
+//                SharedPreferences.Editor editor = mSharedPreferences.edit();
+//                editor.putString("phonenumber", PersonalInfo.getPhonenumber());
+//                editor.putString("nickname", PersonalInfo.getNickname());
+//                editor.putString("icon", PersonalInfo.getIcon());
+//                editor.putString("usericonpath", PersonalInfo.getIcon());
+//                editor.putString("qq", PersonalInfo.getQq());
+//                editor.putString("weixin", PersonalInfo.getWeixin());
+//                editor.putString("address", PersonalInfo.getAddress());
+//                editor.putString("sex", PersonalInfo.getSex());
+//                editor.putString("schoolname", PersonalInfo.getSchoolname());
+//                editor.putString("departmentname", PersonalInfo.getDepartmentname());
+//                editor.putString("majorname", PersonalInfo.getMajorname());
+//                editor.putString("corporationname", PersonalInfo.getCorporationname());
+//                editor.putString("corporationposition", PersonalInfo.getCorporationposition());
+//                editor.putString("birthday", PersonalInfo.getBirthday());
+//                editor.putInt("ruxueyear", PersonalInfo.getRuxueyear());
+//                editor.putString("from", PersonalInfo.getFrom());
+//                editor.putString("introduce", PersonalInfo.getIntroduce());
+//                editor.putString("type", PersonalInfo.getType());
+//                editor.commit();
+            //获得个人头像
+            }else if(name.startsWith("getPerIc")){
+
+
+                String[] strings = name.split(" ");
+                if(strings.length<2){
+                    return;
+                }
+                String ph = strings[1];
+                if(!ph.equals(ObjectService.personalInfo.getPhonenumber())){
+                    return;
+                }
+
+                String path = Config.usericonpath +"/"+ ObjectService.personalInfo.getPhonenumber()+".jpg";// sd路径
+                String sdStatus = Environment.getExternalStorageState();
+                if (!sdStatus.equals(Environment.MEDIA_MOUNTED)) { // 检测sd是否可用
+                    return;
+                }
+                OutputStream out = new FileOutputStream(path);
+                InputStream is = new ByteArrayInputStream(bs2);
+                byte[] buff = new byte[1024];
+                int len = 0;
+                while ((len = is.read(buff)) != -1) {
+                    out.write(buff, 0, len);
+                }
+                is.close();
+                out.close();
+
+                ObjectService.personalInfo.setIcon(path);
+
+                FileInputStream fis = null;
+//                try {
+                    fis = new FileInputStream(path);
+                    Bitmap bitmap  = BitmapFactory.decodeStream(fis);
+                    ObjectService.personalIcon=bitmap;
+
+//                } catch (FileNotFoundException e) {
+//                    e.printStackTrace();
+//                }
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.INDEXFRAGMENT");
+                intent.putExtra("type","getPerIc");
+                sendCast(intent);
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.MYSELFFRAGMENT");
+                intent2.putExtra("type","getPerIc");
+                sendCast(intent2);
+
+                Intent intent3=new Intent("thefirstchange.example.com.communicationtext.PERSONALHOMEPAGE");
+                intent3.putExtra("type","getPerIc");
+                sendCast(intent3);
+
+
+                SharedPreferences sh = getSharedPreferences( Config.sharedPreferences_personal_info,Context.MODE_PRIVATE);
+
+                Gson gson = new Gson();
+                String json = gson.toJson(ObjectService.personalInfo);
+                SharedPreferences.Editor editor = sh.edit() ;
+                editor.putString(Config.sharedPreferences_personal_info, json) ; //存入json串
+                editor.commit() ; //提交
+
+                //刷新好友列表时  ， 加载头像
+            }else if(name.startsWith("getContactListIc")){
+
+                String[] strings = name.split(" ");
+                if(strings.length<2){
+                    return;
+                }
+                String ph = strings[1];
+
+                String path = Config.usericonpath +"/"+ ph+".jpg";// sd路径
+                String sdStatus = Environment.getExternalStorageState();
+                if (!sdStatus.equals(Environment.MEDIA_MOUNTED)) { // 检测sd是否可用
+                    return;
+                }
+                OutputStream out = new FileOutputStream(path);
+                InputStream is = new ByteArrayInputStream(bs2);
+                byte[] buff = new byte[1024];
+                int len = 0;
+                while ((len = is.read(buff)) != -1) {
+                    out.write(buff, 0, len);
+                }
+                is.close();
+                out.close();
+
+                if(StaticAllList.friendList.containsKey(ph)){
+                    StaticAllList.friendList.get(ph).setIcon(path);
+                }
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.CONTACTSWIPE");
+                intent.putExtra("type","getContactListIc");
+                intent.putExtra("ph",ph);
+                sendCast(intent);
+
+
+                //也要刷新  消息界面的头像
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent2.putExtra("type","getNotiUserIc");
+                intent2.putExtra("ph",ph);
+                sendCast(intent2);
+
+
+                //某用户给自己发消息  获得头像
+            }else if(name.startsWith("freNotiUserIc")){
+
+                String[] strings = name.split(" ");
+                if(strings.length<2){
+                    return;
+                }
+                String ph = strings[1];
+
+                String path = Config.usericonpath +"/"+ ph+".jpg";// sd路径
+                String sdStatus = Environment.getExternalStorageState();
+                if (!sdStatus.equals(Environment.MEDIA_MOUNTED)) { // 检测sd是否可用
+                    return;
+                }
+                OutputStream out = new FileOutputStream(path);
+                InputStream is = new ByteArrayInputStream(bs2);
+                byte[] buff = new byte[1024];
+                int len = 0;
+                while ((len = is.read(buff)) != -1) {
+                    out.write(buff, 0, len);
+                }
+                is.close();
+                out.close();
+
+                if(StaticAllList.friendList.containsKey(ph)){
+                    StaticAllList.friendList.get(ph).setIcon(path);
+                }
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent.putExtra("type","freNotiUserIc");
+                intent.putExtra("ph",ph);
+                sendCast(intent);
+
+                //进入群成员列表时   获得成员的头像
+            }else if(name.startsWith("groupUserIc")){
+
+                String[] strings = name.split(" ");
+                if(strings.length<3){
+                    return;
+                }
+                String ph = strings[1];
+                int groupid = Integer.parseInt(strings[2]);
+
+                String grouppath = Config.usericonpath+"/"+groupid;
+
+                File file = new File(grouppath);
+                if(!file.exists()){
+                    file.mkdir();
+                }
+
+
+                String path = grouppath+"/"+ ph+".jpg";// sd路径
+                String sdStatus = Environment.getExternalStorageState();
+                if (!sdStatus.equals(Environment.MEDIA_MOUNTED)) { // 检测sd是否可用
+                    return;
+                }
+                OutputStream out = new FileOutputStream(path);
+                InputStream is = new ByteArrayInputStream(bs2);
+                byte[] buff = new byte[1024];
+                int len = 0;
+                while ((len = is.read(buff)) != -1) {
+                    out.write(buff, 0, len);
+                }
+                is.close();
+                out.close();
+
+                if(StaticAllList.groupUsersInfo.containsKey(groupid)){
+                    for(UserInGroupInfo userInGroupInfo : StaticAllList.groupUsersInfo.get(groupid)){
+                        if(userInGroupInfo.getPh().equals(ph)){
+                            userInGroupInfo.setIcon(path);
+                            Intent intent=new Intent("thefirstchange.example.com.communicationtext.ALLPEOPLESHOW");
+                            intent.putExtra("type","groupUserIc");
+                            intent.putExtra("ph",ph);
+                            sendCast(intent);
+                            break;
+                        }
+                    }
+                }
+
+
+            }
+            //链接验证的结果
+            else if (name.equals("authRs")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+
+
+                    String authRs = jsonObject.getString("authRs");
+
+                    Intent intent=new Intent("thefirstchange.example.com.communicationtext.MAIN");
+                    intent.putExtra("type","authRs");
+                    intent.putExtra("authRs",authRs);
+                    sendCast(intent);
+
+            }
+
+            //登录结果
+        else if(name.equals("loginRs")){
+
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String type = jsonObject.getString("type");
+                String rs = jsonObject.getString("rs");
+                if(rs.equals("ok")){
+
+                  new Thread(){
+
+                      public void run(){
+
+                          SendToServer.getPersonalInfo(ObjectService.personalInfo.getPhonenumber());
+
+                              File dir = new File(Config.path);
+                              if (!dir.exists()) {
+                                  dir.mkdir();
+                              }
+
+                              File dir1 = new File(Config.path1);
+                              if (!dir1.exists()) {
+                                  dir1.mkdir();
+                              }
+
+                              File dir2 = new File(Config.path2);
+                              if (!dir2.exists()) {
+                                  dir2.mkdir();
+                              }
+
+                              File dir3 = new File(Config.dongtaipath);
+                              if (!dir3.exists()) {
+                                  dir3.mkdir();
+                              }
+
+                              File dir4 = new File(Config.usericonpath);
+                              if (!dir4.exists()) {
+                                  dir4.mkdir();
+                              }
+
+                              File dir5 = new File(Config.DtIcpath);
+                              if (!dir5.exists()) {
+                                  dir5.mkdir();
+                              }
+
+                          File dir6 = new File(Config.groupusericonpath);
+                          if (!dir6.exists()) {
+                              dir6.mkdir();
+                          }
+
+                          SendToServer.getPerIc("getPerIc",ObjectService.personalInfo.getPhonenumber());
+                          SendToServer.getSingleChatMsgNotRead(ObjectService.personalInfo.getPhonenumber());
+                          SendToServer.getGroupChatMsgNotRead(ObjectService.personalInfo.getPhonenumber());
+                          SendToServer.getGroupsInfoOfUser(ObjectService.personalInfo.getPhonenumber());
+                          SendToServer.getRequestFriendOrGroup(ObjectService.personalInfo.getPhonenumber());
+                          SendToServer.getAlldutynoti();
+                          SendToServer.getAllFriendInfo();
+                      }
+
+                  }.start();
+                }
+                //登录成功
+                if(type.equals("loginUI")){
+                    Intent intent=new Intent("thefirstchange.example.com.communicationtext.LOGIN_INFO");
+                    intent.putExtra("loginRs",rs);
+                    sendCast(intent);
+                }else if(type.equals("MainUI")){
+                    Intent intent2=new Intent("thefirstchange.example.com.communicationtext.MAIN");
+                    intent2.putExtra("type","loginRs");
+                    intent2.putExtra("login_info",rs);
+                    sendCast(intent2);
+                }
+
+
+                //修改密码的结果
+            }else if(name.equals("upPwdRs")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("rs");
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.ALTERPASSWORD");
+                intent.putExtra("type","upPwdRs");
+                intent.putExtra("rs",rs);
+                sendCast(intent);
+
+            //修改个人信息的结果
+            }else if(name.equals("ChPerInRs")){
+
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("rs");
+
+                String type = "ChPerInRs";
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.UPDATEPERSONALINFO");
+                intent.putExtra("rs",rs);
+                sendCast(intent);
+
+            }
+
+
+            //用户注册账号时  判断提交的手机号是否已经被注册
+            else if(name.equals("isPhonenumberRegistedResult")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("type");
+                if(rs.equals("ok")){
+
+                    //该号码已经被注册
+                }else if(rs.equals("hasregisted")){
+
+                }else {
+
+                }
+
+
+                // 获取验证码   一个手机号一天最多3次   获取验证码的结果
+            }else if(name.equals("getPhonenumberCodeResult")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("type");
+                if(rs.equals("ok")){
+
+                    String code = jsonObject.getString("code");
+
+
+                    //该号码今天发送的验证码已经达到3次了
+                }else if(rs.equals("TodayexceedThreeTimes")){
+
+                }else {
+
+                }
+
+                //注册新用户的返回结果
+            }else if(name.equals("registeruserResult")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("type");
+                if(rs.equals("ok")){
+
+                    //验证码错误
+                }else  if(rs.equals("codeerror")){
+
+                    //其他错误
+                }else{
+
+                }
+
+
+              //注册用户 测试
+            }else if(name.equals("registestRs")){
+                String rs = msgbody;
+                Intent intent3=new Intent("thefirstchange.example.com.communicationtext.REGISTERPHONENUMBER");
+                intent3.putExtra("rs",rs);
+                sendCast(intent3);
+
+            }
+
+
+
+            //添加好友到自己的好友列表
+        else if(name.equals("addUserToFriendListResult")){
+
+
+                User myFriend =  new Gson().fromJson(msgbody, new TypeToken<User>(){}.getType());
+                MyFriend userGroup = new MyFriend();
+
+                userGroup.setRemark(myFriend.getNickname());
+                userGroup.setFriendgroup(0);
+                userGroup.setPhonenumber(myFriend.getPhonenumber());
+                userGroup.setNickname(myFriend.getNickname());
+                userGroup.setPassword(myFriend.getPassword());
+                userGroup.setIcon(myFriend.getIcon());
+                userGroup.setQq(myFriend.getQq());
+                userGroup.setWeixin(myFriend.getWeixin());
+                userGroup.setAddress(myFriend.getAddress());
+                userGroup.setSex(myFriend.getSex());
+                userGroup.setSchoolname(myFriend.getSchoolname());
+                userGroup.setDepartmentname(myFriend.getDepartmentname());
+                userGroup.setMajorname(myFriend.getMajorname());
+                userGroup.setCorporationname(myFriend.getCorporationname());
+                userGroup.setCorporationposition(myFriend.getCorporationposition());
+
+                StaticAllList.friendList.put(userGroup.getPhonenumber(),userGroup);
+
+                //获得某用户的user表中的基本信息   没有头像
+            }else if(name.equals("getFrInByPhRs")){
+                User userGroup = new Gson().fromJson(msgbody, new TypeToken<User>(){}.getType());
+
+                if(StaticAllList.friendList.containsKey(userGroup.getPhonenumber())){
+                    userGroup.setIcon(StaticAllList.friendList.get(userGroup.getPhonenumber()).getIcon());
+                }
+                StaticAllListOperator.add2UserTemps(userGroup);
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.PERSONALHOMEPAGE");
+                intent2.putExtra("type","getFrInByPhRs");
+                sendCast(intent2);
+
+                Intent intent3=new Intent("thefirstchange.example.com.communicationtext.FRAGMENT_ONE");
+                intent3.putExtra("type","getFrInByPhRs");
+                sendCast(intent3);
+
+                //进入某人的个人页面时  获得其基本信息
+            }else if(name.equals("getIndexInfoByPhRs")){
+                User userGroup = new Gson().fromJson(msgbody, new TypeToken<User>(){}.getType());
+
+                if(StaticAllList.friendList.containsKey(userGroup.getPhonenumber())){
+                    userGroup.setIcon(StaticAllList.friendList.get(userGroup.getPhonenumber()).getIcon());
+                }
+                StaticAllListOperator.add2UserTemps(userGroup);
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.PERSONALHOMEPAGE");
+                intent2.putExtra("type","getIndexInfoByPhRs");
+                intent2.putExtra("ph",userGroup.getPhonenumber());
+                sendCast(intent2);
+
+                Intent intent3=new Intent("thefirstchange.example.com.communicationtext.FRAGMENT_ONE");
+                intent3.putExtra("type","getIndexInfoByPhRs");
+                intent2.putExtra("ph",userGroup.getPhonenumber());
+                sendCast(intent3);
+            }
+                //进入某人的个人页面时  获得其头像
+            else if(name.startsWith("getIndexIcInfoByPhRs")){
+
+                if (name.split(" ").length < 2) {
+                    return;
+                }
+                String s = name;
+                String msgbody2 = name.split(" ")[1];
+                JSONObject jsonObject = new JSONObject(msgbody2);
+                String ph = jsonObject.getString("ph");
+
+                String path = Config.usericonpath + "/" + ObjectService.personalInfo.getPhonenumber() + ".jpg";
+//                String path = Config.usericonpath + "/" + UUID.randomUUID().toString() + ".jpg";
+//                byte[] bs3 = Base64.decode(bs2, Base64.DEFAULT);
+                OutputStream out = new FileOutputStream(path);
+                InputStream is = new ByteArrayInputStream(bs2);
+                byte[] buff = new byte[1024];
+                int len = 0;
+                while ((len = is.read(buff)) != -1) {
+                    out.write(buff, 0, len);
+                }
+                is.close();
+                out.close();
+
+                if(StaticAllListOperator.isUserTempsContainPh(ph)){
+                    StaticAllList.usertemps.get(ph).setIcon(path);
+                }
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.PERSONALHOMEPAGE");
+                intent2.putExtra("type","getIndexIcInfoByPhRs");
+                intent2.putExtra("ph",ph);
+                sendCast(intent2);
+
+                Intent intent3=new Intent("thefirstchange.example.com.communicationtext.FRAGMENT_ONE");
+                intent3.putExtra("type","getIndexIcInfoByPhRs");
+                intent3.putExtra("ph",ph);
+                sendCast(intent3);
+
+            }
+
+            //获得好友的 头像
+            else if(name.startsWith("getFrIcByPhRs")){
+
+                if (name.split(" ").length < 2) {
+                    return;
+                }
+                String s = name;
+                String msgbody2 = name.split(" ")[1];
+                JSONObject jsonObject = new JSONObject(msgbody2);
+                String ph = jsonObject.getString("ph");
+
+                String path = Config.usericonpath + "/" + ObjectService.personalInfo.getPhonenumber() + ".jpg";
+//                String path = Config.usericonpath + "/" + UUID.randomUUID().toString() + ".jpg";
+//                byte[] bs3 = Base64.decode(bs2, Base64.DEFAULT);
+                OutputStream out = new FileOutputStream(path);
+                InputStream is = new ByteArrayInputStream(bs2);
+                byte[] buff = new byte[1024];
+                int len = 0;
+                while ((len = is.read(buff)) != -1) {
+                    out.write(buff, 0, len);
+                }
+                is.close();
+                out.close();
+
+                if(StaticAllListOperator.isUserTempsContainPh(ph)){
+                    StaticAllList.usertemps.get(ph).setIcon(path);
+                }
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.PERSONALHOMEPAGE");
+                intent2.putExtra("type","getFrIcByPhRs");
+                intent2.putExtra("ph",ph);
+                sendCast(intent2);
+
+                Intent intent3=new Intent("thefirstchange.example.com.communicationtext.FRAGMENT_ONE");
+                intent3.putExtra("type","getFrIcByPhRs");
+                intent3.putExtra("ph",ph);
+                sendCast(intent3);
+
+
+            }
+
+            //获得某用户的群的基本信息
+            else if(name.equals("getGroupsInfoOfUserResult")){
+                Vector<UserGroup> userGroups =  new Gson().fromJson(msgbody, new TypeToken<Vector<UserGroup>>(){}.getType());
+                StaticAllList.groupList.clear();
+                for(int i=0;i<userGroups.size();++i){
+                    StaticAllList.groupList.put(userGroups.get(i).getGroupid(),userGroups.get(i));
+                }
+
+                //保存到数据库
+                BasicDataDao basicDataDao = BasicDataDao.getInstance(this);
+                basicDataDao.deleteUserGroupByPh(ObjectService.personalInfo.getPhonenumber());
+                basicDataDao.saveUserGroupList(userGroups);
+
+                //获得自己的所有好友信息
+                //刚登陆
+            }else if(name.equals("getAllFriInfoRs")){
+
+                Vector<MyFriendEasy> myFriends = new Gson().fromJson(msgbody, new TypeToken<Vector<MyFriendEasy>>(){}.getType());
+                Vector<String> phs = new Vector<>();
+                for(int i=0;i<myFriends.size();++i){
+                    MyFriendEasy myFriendEasy = myFriends.get(i);
+                    String ph = myFriendEasy.getPhonenumber();
+                    phs.add(ph);
+                    String nickname =myFriendEasy.getNickname();
+                    String sex = myFriendEasy.getSex();
+                    String remark = myFriendEasy.getRemark();
+                    int friendgroup = myFriendEasy.getFriendgroup();
+                    String icon = myFriendEasy.getIcon();
+
+
+                    if(StaticAllList.friendList.containsKey(ph)){
+                        StaticAllList.friendList.get(ph).setNickname(nickname);
+                        StaticAllList.friendList.get(ph).setSex(sex);
+                        StaticAllList.friendList.get(ph).setRemark(remark);
+                        StaticAllList.friendList.get(ph).setFriendgroup(friendgroup);
+                        String iconpath = MyTools.getIconPath(ph);
+                        StaticAllList.friendList.get(ph).setIcon(iconpath);
+
+                    }else{
+                        MyFriend myFriend = new MyFriend();
+                        myFriend.setPhonenumber(ph);
+                        myFriend.setNickname(nickname);
+                        myFriend.setSex(sex);
+                        myFriend.setRemark(remark);
+                        myFriend.setFriendgroup(friendgroup);
+
+                        String iconpath = MyTools.getIconPath(ph);
+                        myFriend.setIcon(iconpath);
+
+                        StaticAllList.friendList.put(ph,myFriend);
+
+                    }
+
+                }
+
+                for(String ph:StaticAllList.friendList.keySet()){
+                    if(!phs.contains(ph)){
+                        StaticAllList.friendList.remove(ph);
+                    }
+                }
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.CONTACTSWIPE");
+                intent.putExtra("type","getAllFriendInfoResult");
+                sendCast(intent);
+
+
+                //保存到数据库
+                BasicDataDao basicDataDao = BasicDataDao.getInstance(this);
+                basicDataDao.deleteUserFriendByPh(ObjectService.personalInfo.getPhonenumber());
+                basicDataDao.saveUserFriendList((Vector<MyFriend>)StaticAllList.friendList.values());
+
+
+             //刷新自己的好友列表
+            }else if(name.equals("freshAllFriendInfoRs")){
+
+                Vector<MyFriendEasy> myFriends = new Gson().fromJson(msgbody, new TypeToken<Vector<MyFriendEasy>>(){}.getType());
+                Vector<String> phs = new Vector<>();
+                for(int i=0;i<myFriends.size();++i){
+                    MyFriendEasy myFriendEasy = myFriends.get(i);
+                    String ph = myFriendEasy.getPhonenumber();
+                    phs.add(ph);
+                    String nickname =myFriendEasy.getNickname();
+                    String sex = myFriendEasy.getSex();
+                    String remark = myFriendEasy.getRemark();
+                    int friendgroup = myFriendEasy.getFriendgroup();
+                    String icon = myFriendEasy.getIcon();
+
+                    MyFriend myFriend = new MyFriend();
+                    if(StaticAllList.friendList.containsKey(ph)){
+                        StaticAllList.friendList.get(ph).setNickname(nickname);
+                        StaticAllList.friendList.get(ph).setSchoolname(sex);
+                        StaticAllList.friendList.get(ph).setRemark(remark);
+                        StaticAllList.friendList.get(ph).setFriendgroup(friendgroup);
+                        String iconpath = MyTools.getIconPath(ph);
+                        StaticAllList.friendList.get(ph).setIcon(iconpath);
+
+                    }else{
+                        StaticAllList.friendList.put(ph,myFriend);
+                        String iconpath = MyTools.getIconPath(ph);
+                        StaticAllList.friendList.get(ph).setIcon(iconpath);
+
+                    }
+
+                }
+
+                for(String ph:StaticAllList.friendList.keySet()){
+                    if(!phs.contains(ph)){
+                        StaticAllList.friendList.remove(ph);
+                    }
+                }
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.CONTACTSWIPE");
+                intent.putExtra("type","freshAllFriendInfoRs");
+                sendCast(intent);
+
+                //刷新 消息界面
+            }else if(name.equals("freshNotificationRs")){
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent.putExtra("type","freshNotificationRs");
+                sendCast(intent);
+
+            }
+
+            //获得在线的好友有哪些    就是返回在线的账号就行
+            else if(name.equals("getFriendOnlineResult")){
+                Vector<String> userGroups = new Gson().fromJson(msgbody, new TypeToken<Vector<String>>(){}.getType());
+
+
+            //获得某群的所有成员
+            }else if(name.startsWith("getGroupAllURs")){
+
+                String[] strings = name.split(" ");
+                int groupid = -1;
+                if(strings.length>=2){
+                    groupid=Integer.parseInt(strings[1]);
+                }
+                Vector<UserInGroupInfo> users = new Gson().fromJson(msgbody, new TypeToken<Vector<UserInGroupInfo>>(){}.getType());
+                if(groupid==-1){
+                    return;
+                }
+                StaticAllList.groupUsersInfo.put(groupid,users);
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.ALLPEOPLESHOW");
+                intent.putExtra("type","getGroupAllURs");
+                sendCast(intent);
+
+            }
+
+            //请求删除某一个好友  该请求服务器是否收到
+            else if(name.equals("deleteFriendResult")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("type");
+                String ph = jsonObject.getString("ph");
+                if(rs.equals("ok")){
+                    StaticAllList.friendList.remove(ph);
+                }
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.CONTACTSWIPE");
+                intent.putExtra("type","deleteFriendResult");
+                intent.putExtra("rs",rs);
+                sendCast(intent);
+
+                //自己的一个好友删除了自己   自己这边不用显示  就把他从好友列表删除就行
+            }else if(name.equals("yourfrienddeleteyou")){
+                int a=0;
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String friendphonenumber = jsonObject.getString("phonenumber");
+                int msgid = jsonObject.getInt("msgid");
+                StaticAllList.friendList.remove(friendphonenumber);
+
+                //向服务器回执  自己已经收到
+                SendToServer.reciveDeleteMe(msgid);
+
+                //退群的申请结果           用法:客户端点击退群  等到服务器的返回结果  显示成功等
+            }else if(name.equals("exitGroupRs")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("rs");
+                int grupid = jsonObject.getInt("gid");
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.GROUPPAGE");
+                intent2.putExtra("type","exitGroupRs");
+                intent2.putExtra("rs",rs);
+                intent2.putExtra("gid",grupid);
+                sendCast(intent2);
+
+                if(rs.equals("ok")){
+                    Intent intent=new Intent("thefirstchange.example.com.communicationtext.GROUP_MSG");
+                    intent.putExtra("type","exitGroupRs");
+                    intent.putExtra("gid",grupid);
+                    sendCast(intent);
+                }
+
+            //某用户退群   若自己是该群的管理员  那么收到该消息  添加到消息队列
+            }else if(name.equals("GroupUserExitGroup")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                int msgid = jsonObject.getInt("msgid");
+                int groupid = jsonObject.getInt("gid");
+                String phonenumber = jsonObject.getString("phonenumber");
+                String groupnickname = jsonObject.getString("groupnickname"); //改用户的群昵称
+                long time = jsonObject.getLong("time");
+                String message = jsonObject.getString("message");
+
+                ChatMsg requestMsg = new ChatMsg();
+                requestMsg.setMsgid(msgid);
+                requestMsg.setSenderid(phonenumber);
+                requestMsg.setSendername(groupnickname);
+                requestMsg.setMsgtime(time);
+                requestMsg.setType("exitgroup");
+                requestMsg.setMsgbody(message);
+                requestMsg.setGroupid(groupid);
+                requestMsg.setSendersex("");
+                requestMsg.setSendericon("");
+
+                Vector<Integer> msgs = new Vector<>();
+                for(int i=0;i<MyMessageQueue.requestQueueNotHandle.size();++i){
+                    ChatMsg msg = MyMessageQueue.requestQueueNotHandle.get(i);
+                    if(msg.getSenderid().equals(requestMsg.getSenderid())&&msg.getType().equals(requestMsg.getType())){
+                        msgs.add(i);
+                    }
+                }
+                for(int i=0;i<msgs.size();++i){
+                    int index = msgs.get(i);
+                    MyMessageQueue.requestQueueNotHandle.remove(index);
+                }
+
+                MyMessageQueue.requestQueueNotHandle.add(requestMsg);
+
+                if(StaticAllList.chatRecordDao!=null){
+                    StaticAllList.chatRecordDao.saveRequest(requestMsg);
+                }else{
+                    MainActivity.initChatRecorddb();
+                    StaticAllList.chatRecordDao.saveRequest(requestMsg);
+                }
+
+                //有用户添加自己为好友
+            }else if(name.equals("AddYouAsFriend")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                int msgid = jsonObject.getInt("msgid");
+                String phonenumber = jsonObject.getString("phonenumber");
+                String icon = jsonObject.getString("icon");      //对方的头像
+                String sex = jsonObject.getString("sex");
+                String nickname = jsonObject.getString("nickname");
+                String addmsg = jsonObject.getString("msg");
+                Long time = jsonObject.getLong("time");
+
+                ChatMsg requestMsg = new ChatMsg();
+                requestMsg.setMsgid(msgid);
+                requestMsg.setSenderid(phonenumber);
+                requestMsg.setSendername(nickname);
+                requestMsg.setMsgtime(time);
+                requestMsg.setType("addfriend");
+                requestMsg.setMsgbody(addmsg);
+                requestMsg.setGroupid(-1);
+                requestMsg.setSendersex(sex);
+                requestMsg.setSendericon(icon);
+
+                Vector<Integer> msgs = new Vector<>();
+                for(int i=0;i<MyMessageQueue.requestQueueNotHandle.size();++i){
+                    ChatMsg msg = MyMessageQueue.requestQueueNotHandle.get(i);
+                    if(msg.getType().equals("addfriend")&&msg.getSenderid().equals(requestMsg.getSenderid())){
+                        msgs.add(i);
+                    }
+                }
+
+                for(int i=0;i<msgs.size();++i){
+                    int index = msgs.get(i);
+                    MyMessageQueue.requestQueueNotHandle.remove(index);
+                }
+
+                MyMessageQueue.requestQueueNotHandle.add(requestMsg);
+
+                Intent intent1=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent1.putExtra("type","AddYouAsFriend");
+                sendCast(intent1);
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.OTHERPEOPLEAPPLICATION");
+                intent2.putExtra("type","other");
+                sendCast(intent2);
+
+
+                //添加好友这个请求   服务器的结果
+            }else if(name.equals("rstAddFriRs")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String friendphonenumber = jsonObject.getString("FriPh");  //自己要添加的对方的账号
+                String type = jsonObject.getString("type");
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.ADD_FRIEND");
+                intent.putExtra("type","requestAddFriendResult");
+                intent.putExtra("friendphonenumber","friendphonenumber");
+                intent.putExtra("rs",type);
+                sendCast(intent);
+
+                //对方同意了你的好友添加申请   看到该消息后  要向服务器回执  AddFriendResult这个函数
+            }else if(name.equals("agreeYourAddFriend")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                int msgid = jsonObject.getInt("msgid");
+                final String phonenumber = jsonObject.getString("phonenumber");
+                String icon = jsonObject.getString("icon");      //对方的头像
+                String sex = jsonObject.getString("sex");
+                String nickname = jsonObject.getString("nickname");
+
+                ChatMsg requestMsg = new ChatMsg();
+                requestMsg.setMsgid(msgid);
+                requestMsg.setSenderid(phonenumber);
+                requestMsg.setSendername(nickname);
+                requestMsg.setMsgtime(0);
+                requestMsg.setType("agreeYourAddFriend");
+                requestMsg.setMsgbody("");
+                requestMsg.setGroupid(-1);
+                requestMsg.setSendersex(sex);
+                requestMsg.setSendericon(icon);
+
+                MyMessageQueue.requestQueueNotHandle.add(requestMsg);
+
+                Intent intent1=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent1.putExtra("type","agreeYourAddFriend");
+                sendCast(intent1);
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.OTHERPEOPLEAPPLICATION");
+                intent2.putExtra("type","other");
+                sendCast(intent2);
+
+
+                new Thread(){
+                    public void run(){
+                        SendToServer.addUserToFriendList(phonenumber);
+                        }
+                }.start();
+
+
+
+                if(StaticAllList.chatRecordDao!=null){
+                    StaticAllList.chatRecordDao.saveRequest(requestMsg);
+                }else{
+                    MainActivity.initChatRecorddb();
+                    StaticAllList.chatRecordDao.saveRequest(requestMsg);
+                }
+
+                //对方不同意你的好友添加申请    看到该消息后  要向服务器回执  AddFriendResult这个函数
+            }else if(name.equals("disagreeYourAddFriend")){
+
+                JSONObject jsonObject = new JSONObject(msgbody);
+                int msgid = jsonObject.getInt("msgid");
+                String phonenumber = jsonObject.getString("phonenumber");
+                String icon = jsonObject.getString("icon");      //对方的头像
+                String sex = jsonObject.getString("sex");
+                String nickname = jsonObject.getString("nickname");
+
+                ChatMsg requestMsg = new ChatMsg();
+                requestMsg.setMsgid(msgid);
+                requestMsg.setSenderid(phonenumber);
+                requestMsg.setSendername(nickname);
+                requestMsg.setMsgtime(0);
+                requestMsg.setType("disagreeYourAddFriend");
+                requestMsg.setMsgbody("");
+                requestMsg.setGroupid(-1);
+                requestMsg.setSendersex(sex);
+                requestMsg.setSendericon(icon);
+
+                MyMessageQueue.requestQueueNotHandle.add(requestMsg);
+
+                Intent intent1=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent1.putExtra("type","disagreeYourAddFriend");
+                sendCast(intent1);
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.OTHERPEOPLEAPPLICATION");
+                intent2.putExtra("type","other");
+                sendCast(intent2);
+
+                if(StaticAllList.chatRecordDao!=null){
+                    StaticAllList.chatRecordDao.saveRequest(requestMsg);
+                }else{
+                    MainActivity.initChatRecorddb();
+                    StaticAllList.chatRecordDao.saveRequest(requestMsg);
+                }
+
+                //别人添加自己为好友时  自己要同意或不同意   这个是对同意或不同意的结果
+            }else if(name.equals("AddFriendReturnResult")){
+
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String otherphonenumber = jsonObject.getString("otherphonenumber");  //自己要添加的对方的账号
+                String rs = jsonObject.getString("type");
+                int msgid = jsonObject.getInt("msgid");
+                String operator = jsonObject.getString("rs");
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.OTHERPEOPLEAPPLICATION");
+                intent.putExtra("type","AddFriendReturnResult");
+                intent.putExtra("rs",rs);
+                intent.putExtra("msgid",msgid);
+                intent.putExtra("operator",operator);
+
+                sendCast(intent);
+
+                //申请加群   该申请的结果
+            }else if(name.equals("rqAddGpRs")){
+
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String groupid = jsonObject.getString("groupid");
+                String type = jsonObject.getString("type");
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.ADD_GROUP");
+                intent.putExtra("type","requestAddGroupResult");
+                intent.putExtra("rs",type);
+                sendCast(intent);
+
+                //用户加群时  自己是该群的管理员   那么自己会收到该消息
+            }else if(name.equals("uRstAddGroup")){
+
+                JSONObject jsonObject = new JSONObject(msgbody);
+                int msgid = jsonObject.getInt("msgid");
+                int groupid = jsonObject.getInt("gid");
+                String phonenumber = jsonObject.getString("ph");
+                String icon = jsonObject.getString("icon");      //对方的头像
+                String sex = jsonObject.getString("sex");
+                String nickname = jsonObject.getString("nickname");
+                long time = jsonObject.getLong("time");
+                String message = jsonObject.getString("msg");  //加群的验证信息
+
+                ChatMsg requestMsg = new ChatMsg();
+                requestMsg.setMsgid(msgid);
+                requestMsg.setSenderid(phonenumber);
+                requestMsg.setSendername(nickname);
+                requestMsg.setMsgtime(0);
+                requestMsg.setType("addgroup");
+                requestMsg.setMsgbody(message);
+                requestMsg.setGroupid(groupid);
+                requestMsg.setSendersex(sex);
+                requestMsg.setSendericon(icon);
+
+                //若某成员重复加群  那么去掉以前的
+                Vector<Integer> msgs = new Vector<>();
+                for(int i=0;i<MyMessageQueue.requestQueueNotHandle.size();++i){
+                    ChatMsg msg = MyMessageQueue.requestQueueNotHandle.get(i);
+                    if(msg.getType().equals("addgroup")&&msg.getSenderid().equals(requestMsg.getSenderid())&&msg.getGroupid()==groupid){
+                        msgs.add(i);
+                    }
+                }
+                for(int i=0;i<msgs.size();++i){
+                    int index = msgs.get(i);
+                    MyMessageQueue.requestQueueNotHandle.remove(index);
+                }
+
+
+
+                MyMessageQueue.requestQueueNotHandle.add(requestMsg);
+
+
+
+                Intent intent1=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent1.putExtra("type","uRstAddGroup");
+                sendCast(intent1);
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.OTHERPEOPLEAPPLICATION");
+                intent2.putExtra("type","other");
+                sendCast(intent2);
+
+                //群管理员对用户的加群  同意或不同意时    该结果
+            }else if(name.equals("handlerAddGroupResult")){
+                String ttt = msgbody;
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String groupid = jsonObject.getString("groupid");
+                //String otherphonenumber = jsonObject.getString("otherphonenumber");
+                int msgid = jsonObject.getInt("msgid");
+                String rs = jsonObject.getString("type");
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.OTHERPEOPLEAPPLICATION");
+                intent.putExtra("type","handlerAddGroupResult");
+                intent.putExtra("rs",rs);
+                intent.putExtra("msgid",msgid);
+                sendCast(intent);
+
+                //加群的结果   被同意了还是不同意
+            }else if(name.equals("AddGroupResult")){
+                String a= msgbody;
+                JSONObject jsonObject = new JSONObject(msgbody);
+                int msgid = jsonObject.getInt("msgid");
+                String type = jsonObject.getString("type");      //结果 agree  disagree
+                final int groupid = jsonObject.getInt("groupid");
+                String handlerid = jsonObject.getString("handlerid");  //处理人id
+                String handlernickname = jsonObject.getString("handlernickname"); //处理人的昵称
+                String icon = jsonObject.getString("icon");
+
+                ChatMsg requestMsg = new ChatMsg();
+                requestMsg.setMsgid(msgid);
+                requestMsg.setSenderid(handlerid);
+                requestMsg.setSendername(handlernickname);
+                requestMsg.setMsgtime(0);
+                if(type.equals("agree")){
+                    requestMsg.setType("agreeAddGroup");
+
+                }else{
+                    requestMsg.setType("disagreeAddGroup");
+                }
+
+                requestMsg.setMsgbody("");
+                requestMsg.setGroupid(groupid);
+                requestMsg.setSendericon(icon);
+
+                MyMessageQueue.requestQueueNotHandle.add(requestMsg);
+
+                Intent intent1=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent1.putExtra("type","AddGroupResult");
+                sendCast(intent1);
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.OTHERPEOPLEAPPLICATION");
+                intent2.putExtra("type","other");
+                sendCast(intent2);
+                if(type.equals("agree")){
+                    new Thread(){
+                        public void run(){
+                            SendToServer.addGroupToListByGroupid(groupid);
+
+                        }
+                    }.start();
+                }
+
+                if(StaticAllList.chatRecordDao!=null){
+                    StaticAllList.chatRecordDao.saveRequest(requestMsg);
+                }else{
+                    MainActivity.initChatRecorddb();
+                    StaticAllList.chatRecordDao.saveRequest(requestMsg);
+                }
+
+                //修改好友备注的结果
+            }else if(name.equals("changeFriendRemarkResult")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("rs");      //结果
+
+                //客户端添加好友成功后  将好友加入到自己的好友列表  拿到其资料
+            }else if(name.equals("addUserToFriendListResult")){
+
+                User userGroup = new Gson().fromJson(msgbody, new TypeToken<User>(){}.getType());
+                MyFriend myFriend = new MyFriend();
+                myFriend.setAddress(userGroup.getAddress());
+                myFriend.setCorporationname(userGroup.getCorporationname());
+                myFriend.setCorporationposition(userGroup.getCorporationposition());
+                myFriend.setDepartmentname(userGroup.getDepartmentname());
+                myFriend.setFriendgroup(0);
+                myFriend.setIcon(userGroup.getIcon());
+                myFriend.setMajorname(userGroup.getMajorname());
+                myFriend.setNickname(userGroup.getNickname());
+                myFriend. setPassword(userGroup.getPassword());
+                myFriend.setPhonenumber(userGroup.getPhonenumber());
+                myFriend.setQq(userGroup.getQq());
+                myFriend.setRemark(userGroup.getNickname());
+                myFriend.setSchoolname(userGroup.getSchoolname());
+                myFriend.setSex(userGroup.getSex());
+                myFriend.setWeixin(userGroup.getWeixin());
+
+
+                 //修改自己群名片成功还是失败
+            }else if(name.equals("upGroupRemarkRs")){
+
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("rs");      //结果
+                if(rs.equals("ok")){
+                    String groupid = jsonObject.getString("gid");
+                    String remark = jsonObject.getString("remark");
+                    StaticAllList.groupList.get(Integer.parseInt(groupid)).setGroupnickname(remark);
+
+                }
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.ALTERGROUPNAME");
+                intent.putExtra("rs",rs);
+                sendCast(intent);
+
+
+            }
+
+
+            else if(name.equals("createCorpRs")){              //创建社团的结果
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("rs");
+                int count=jsonObject.getInt("count");
+                int groupid=jsonObject.getInt("groupid");
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.CREATEPART");
+                intent.putExtra("rs",rs);
+                intent.putExtra("count",count);
+                intent.putExtra("groupid",groupid);
+                sendCast(intent);
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.CORPORATIONCREATE");
+                intent2.putExtra("rs",rs);
+                sendCast(intent2);
+
+            }
+            //创建群的结果
+            else if(name.equals("createGroupResult")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("result");      //结果
+                int groupid = -1;
+                if(rs.equals("ok")){
+                    groupid = jsonObject.getInt("groupid");
+
+                    Intent intent=new Intent("thefirstchange.example.com.communicationtext.CREATEGROUP");
+                    intent.putExtra("rs",rs);
+                    intent.putExtra("groupid",groupid);
+                    sendCast(intent);
+
+                    // 创建群时  还要把群资料加入到自己的群列表   请求服务器拿到该群的资料
+                    SendToServer.addGroupToListByGroupid(groupid);
+
+                }else{
+                    Intent intent=new Intent("thefirstchange.example.com.communicationtext.CREATEGROUP");
+                    intent.putExtra("rs",rs);
+                    intent.putExtra("groupid",groupid);
+                    sendCast(intent);
+                }
+
+                // 创建群时  还要把群资料加入到自己的群列表   请求服务器拿到该群的资料
+            }else if(name.equals("addGroupToListByGroupidResult")){
+
+                UserGroup userGroup = new Gson().fromJson(msgbody, new TypeToken<UserGroup>(){}.getType());
+                if(userGroup==null){
+                    return;
+                }
+               int id = userGroup.getGroupid();
+                StaticAllList.groupList.remove(id);
+                StaticAllList.groupList.put(userGroup.getGroupid(),userGroup);
+
+                //通知群列表刷新
+//                Intent intent=new Intent("thefirstchange.example.com.communicationtext.CHOOSEGROUP");
+//                sendCast(intent);
+
+
+                //获取在某几节课都有空的学生
+            }else if(name.equals("getStuByEptCouRs")){
+                Vector<StuPNP> stuPNPs = new Gson().fromJson(msgbody, new TypeToken< Vector<StuPNP>>(){}.getType());
+
+                //获得某用户自己的教务课表
+        }else if(name.startsWith("getkBRs")){
+
+            if(name.split(" ").length<2) {
+                return;
+            }
+            String msgbody2 = name.split(" ")[1];
+            JSONObject jsonObject = new JSONObject(msgbody2);
+            String rs = jsonObject.getString("rs");
+
+            String type = "getkBRs";
+            if(rs.equals("errUNOrPwd")){
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.REQUESTKEBIAOORSCORE");
+                intent2.putExtra("type",type);
+                intent2.putExtra("rs",rs);
+
+                sendCast(intent2);
+                return;
+            }
+            int xueqi = jsonObject.getInt("xueqi");
+            int grade = jsonObject.getInt("grade");
+
+            //存入数据库  并更新UI
+
+            Vector<Course> courses = new Gson().fromJson(msgbody,new TypeToken<Vector<Course>>(){}.getType());
+
+//                for(int i=0;i<courses.size();++i) {
+//							 System.out.println(courses.get(i).getCN()+"   *********************");
+//						}
+
+            boolean iskong = true;      //判断是不是空值   也就是当前查询的成绩  教务处是否有
+            if(courses!=null&&courses.size()!=0){
+                iskong = false;
+                CourseAndScore.courses = courses;
+                CourseAndScore.courseGrade = grade;
+                CourseAndScore.courseXueqi = xueqi;
+            }
+
+
+
+
+            if(!iskong){
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.CSS");
+                intent.putExtra("type",type);
+                sendCast(intent);
+            }
+
+            Intent intent2=new Intent("thefirstchange.example.com.communicationtext.REQUESTKEBIAOORSCORE");
+            intent2.putExtra("type",type);
+            intent2.putExtra("rs",rs);
+            intent2.putExtra("iskong",iskong);
+
+            sendCast(intent2);
+
+            //获得某用户自己的教务成绩
+        } else if(name.startsWith("getscoRs")){
+            if(name.split(" ").length<2) {
+                return;
+            }
+            String msgbody2 = name.split(" ")[1];
+            JSONObject jsonObject = new JSONObject(msgbody2);
+            String rs = jsonObject.getString("rs");
+            String type = "getscoRs";
+            if(rs.equals("errUNOrPwd")){
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.REQUESTKEBIAOORSCORE");
+                intent2.putExtra("type",type);
+                intent2.putExtra("rs",rs);
+
+                sendCast(intent2);
+                return;
+            }
+            int xueqi = jsonObject.getInt("xueqi");
+            int grade = jsonObject.getInt("grade");
+
+            //存入数据库  并更新UI
+
+            Vector<ListViewScore> listViewScores = new Gson().fromJson(msgbody,new TypeToken<Vector<ListViewScore>>(){}.getType());
+
+
+//                for(int i=0;i<listViewScores.size();++i) {
+//							 System.out.println(listViewScores.get(i).courseName+"   *********************");
+//						}
+
+            boolean iskong = true;      //判断是不是空值   也就是当前查询的成绩  教务处是否有
+            if(listViewScores!=null&&listViewScores.size()!=0){
+                iskong = false;
+                CourseAndScore.scores = listViewScores;
+                CourseAndScore.scoreGrade = grade;
+                CourseAndScore.scoreXueqi = xueqi;
+            }
+
+            Intent intent2=new Intent("thefirstchange.example.com.communicationtext.REQUESTKEBIAOORSCORE");
+            intent2.putExtra("type",type);
+            intent2.putExtra("rs",rs);
+            intent2.putExtra("iskong",iskong);
+
+            sendCast(intent2);
+            if(!iskong){
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.CSS");
+                intent.putExtra("type",type);
+                sendCast(intent);
+            }
+
+
+          //值班个更新    通知
+        }else if(name.equals("dutynoti")){
+
+                JSONObject jsonObject = new JSONObject(msgbody);
+                int groupid = jsonObject.getInt("gid");
+                int DNID = jsonObject.getInt("dnid");
+                long time = jsonObject.getLong("time");
+                String cropname = jsonObject.getString("corpname");
+                String myduty = jsonObject.getString("myduty");  //yes  no 代表我是否被安排值班
+
+                ChatMsg requestMsg = new ChatMsg();
+                requestMsg.setMsgid(DNID);
+//                requestMsg.setSenderid(phonenumber);
+
+                requestMsg.setSendername(cropname);
+                requestMsg.setMsgtime(time);
+                requestMsg.setType("schDuty");
+//                requestMsg.setMsgbody(addmsg);
+                requestMsg.setGroupid(groupid);
+//                requestMsg.setSendersex(sex);
+//                requestMsg.setSendericon(icon);
+                requestMsg.setHandleRs("new");
+                requestMsg.setMsgbody(myduty);
+
+                if(MyMessageQueue.dutyQueueHadRead.containsKey(groupid)){
+                    for(int i=0;i<MyMessageQueue.dutyQueueHadRead.get(groupid).size();++i){
+//                        if(MyMessageQueue.dutyQueueHadRead.get(groupid).get(i).getHandleRs().equals("new")){
+                        MyMessageQueue.dutyQueueHadRead.get(groupid).get(i).setHandleRs("old");
+//                        }
+                    }
+                }
+
+                if(MyMessageQueue.dutyQueueNotRead.containsKey(groupid)){
+
+                    if(!MyMessageQueue.dutyQueueHadRead.containsKey(groupid)){
+                        MyMessageQueue.dutyQueueHadRead.put(groupid,new Vector<ChatMsg>());
+                    }
+                    for(int i=0;i<MyMessageQueue.dutyQueueHadRead.get(groupid).size();++i){
+                       // String a = MyMessageQueue.dutyQueueHadRead.get(groupid).get(i).handleRs;
+//                        if(MyMessageQueue.dutyQueueHadRead.get(groupid).get(i).getHandleRs().equals("new")){
+                            MyMessageQueue.dutyQueueHadRead.get(groupid).get(i).setHandleRs("old");
+//                        }
+                    }
+                    for(int i=0;i<MyMessageQueue.dutyQueueNotRead.get(groupid).size();++i){
+                        ChatMsg chatMsg = MyMessageQueue.dutyQueueNotRead.get(groupid).get(i);
+                        chatMsg.setHandleRs("old");
+                        MyMessageQueue.dutyQueueHadRead.get(groupid).add(chatMsg);
+                    }
+                    MyMessageQueue.dutyQueueNotRead.remove(groupid);
+                }
+
+                MyMessageQueue.dutyQueueNotRead.put(groupid,new Vector<ChatMsg>());
+                MyMessageQueue.dutyQueueNotRead.get(groupid).add(requestMsg);
+
+
+                if(!MyMessageQueue.dutyframes.contains(groupid)){
+                    MyMessageQueue.dutyframes.add(groupid);
+                }
+
+                Intent intent1=new Intent("thefirstchange.example.com.communicationtext.NOTIFICATION");
+                intent1.putExtra("type","dutynoti");
+                sendCast(intent1);
+
+
+            }
+            //值班表到来   把旧的该组织的值班表删除
+        else if(name.startsWith("DutySche")){
+
+            if(name.split(" ").length<2) {
+                return;
+            }
+            String msgbody2 = name.split(" ")[1];
+            JSONObject jsonObject = new JSONObject(msgbody2);
+
+            int groupid = jsonObject.getInt("gid");
+
+
+            CourseAndScore.clientArrangementsTemp = new Gson().fromJson(msgbody,new TypeToken<Vector<ClientArrangement>>(){}.getType());
+            if( CourseAndScore.clientArrangementsTemp!=null&& CourseAndScore.clientArrangementsTemp.size()!=0){
+                Vector<ClientArrangement> delete = new Vector<>();
+                for(int i=0;i<CourseAndScore.clientArrangements.size();++i){
+                    if(CourseAndScore.clientArrangements.get(i).getGroupid()==groupid){
+                        delete.add(CourseAndScore.clientArrangements.get(i));
+                    }
+                }
+
+
+                for(int i=0;i<delete.size();++i){
+                    CourseAndScore.clientArrangements.remove(delete.get(i));
+                }
+                for(int i=0;i< CourseAndScore.clientArrangementsTemp.size();++i){
+//                        System.out.println(CourseAndScore.clientArrangementsTemp.get(i).getDaytime());
+                    CourseAndScore.clientArrangements.add(CourseAndScore.clientArrangementsTemp.get(i));
+                }
+
+//                for(int i=0;i<CourseAndScore.clientArrangements.size();++i){
+//                    if(CourseAndScore.clientArrangements.get(i).getGroupid()==CourseAndScore.duty_groupid){
+//                        int schyear = CourseAndScore.clientArrangements.get(i).getYear();
+//                        int  schmonth = CourseAndScore.clientArrangements.get(i).getMonth();
+//                        int daytime = CourseAndScore.clientArrangements.get(i).getDaytime();
+////                    break;
+//                    }
+//                }
+
+                String type = "DutySche";
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.SCHDUTY");
+                intent.putExtra("type",type);
+                intent.putExtra("groupid",groupid);
+
+                sendCast(intent);
+
+
+                Intent intent2=new Intent("thefirstchange.example.com.communicationtext.DUTYNOTIRECYVIEW");
+                intent2.putExtra("type",type);
+                intent2.putExtra("groupid",groupid);
+                sendCast(intent2);
+
+            }
+
+            //组织的值班管理者  安排值班的结果
+        }else if(name.equals("SARs")){
+
+            JSONObject jsonObject = new JSONObject(msgbody);
+            String rs = jsonObject.getString("rs");
+            String type = "SARs";
+
+            Intent intent=new Intent("thefirstchange.example.com.communicationtext.SCHEDULEARRANGEMENT");
+            intent.putExtra("type",type);
+            intent.putExtra("rs",rs);
+            sendCast(intent);
+
+//                if(rs.equals("ok")){
+//                    Intent intent2=new Intent("thefirstchange.example.com.communicationtext.CSS");
+//                    intent2.putExtra("type",type);
+//                    sendCast(intent2);
+//                }
+//
+        //获得自己加入的某个组织的值班表
+        }else if(name.startsWith("getSDByGidRs")){
+                if(name.split(" ").length<2) {
+                    return;
+                }
+                String msgbody2 = name.split(" ")[1];
+                final int groupid = Integer.parseInt(msgbody2);
+
+                if(DutyNotiRecyclerAdapter.timer!=null){
+                    DutyNotiRecyclerAdapter.timer.cancel();
+                }
+                if(DutyNotiRecyclerAdapter.srLoadingDialog!=null){
+                    DutyNotiRecyclerAdapter.srLoadingDialog.dismiss();
+                }
+
+                CourseAndScore.clientArrangementsTemp = new Gson().fromJson(msgbody,new TypeToken<Vector<ClientArrangement>>(){}.getType());
+                if( CourseAndScore.clientArrangementsTemp!=null&& CourseAndScore.clientArrangementsTemp.size()!=0){
+                    Vector<ClientArrangement> delete = new Vector<>();
+                    for(int i=0;i<CourseAndScore.clientArrangements.size();++i){
+                        if(CourseAndScore.clientArrangements.get(i).getGroupid()==groupid){
+                            delete.add(CourseAndScore.clientArrangements.get(i));
+                        }
+                    }
+
+
+                    for(int i=0;i<delete.size();++i){
+                        CourseAndScore.clientArrangements.remove(delete.get(i));
+                    }
+                    for(int i=0;i< CourseAndScore.clientArrangementsTemp.size();++i){
+//                        System.out.println(CourseAndScore.clientArrangementsTemp.get(i).getDaytime());
+                        CourseAndScore.clientArrangements.add(CourseAndScore.clientArrangementsTemp.get(i));
+                    }
+
+                    for(int i=0;i<CourseAndScore.clientArrangements.size();++i){
+                        if(CourseAndScore.clientArrangements.get(i).getGroupid()==CourseAndScore.duty_groupid){
+                            int schyear = CourseAndScore.clientArrangements.get(i).getYear();
+                            int  schmonth = CourseAndScore.clientArrangements.get(i).getMonth();
+                            int daytime = CourseAndScore.clientArrangements.get(i).getDaytime();
+//                    break;
+                        }
+                    }
+
+//                    CourseAndScore.duty_groupid = groupid;
+
+                    Intent intent = new Intent(NettyService.this, SchDutyActivity.class);
+                    startActivity(intent);
+//                    String type = "DutySche";
+//                    Intent intent=new Intent("thefirstchange.example.com.communicationtext.SCHDUTY");
+//                    intent.putExtra("type",type);
+//                    intent.putExtra("groupid",groupid);
+
+//                    sendCast(intent);
+                    new Thread(){
+                        public void run(){
+
+                            StuDao stuDao = StuDao.getInstance(NettyService.this);
+                            stuDao.removeSchduleBygroupid(groupid);
+                            stuDao.saveStuSchList( CourseAndScore.clientArrangementsTemp);
+
+//                           CourseAndScore.duty_groupid = groupid;
+//                           SharedPreferences mSharedPreferences = getSharedPreferences(Config.sharedPreferences_duty_group, Context.MODE_PRIVATE);
+//                           SharedPreferences.Editor editor = mSharedPreferences.edit();
+//                           editor.putInt("duty_groupid", CourseAndScore.duty_groupid);
+//                           editor.commit();
+                        }
+                    }.start();
+
+                }
+
+
+            }else if(name.startsWith("getAllSDRs")){
+                if(name.split(" ").length<2) {
+                    return;
+                }
+                String msgbody2 = name.split(" ")[1];
+                if(msgbody2.equals("nocorp")){          //自己没有参与任何社团组织
+
+
+
+                }else{
+                    int groupid = Integer.parseInt(msgbody2);
+                    CourseAndScore.clientArrangementsTemp = new Gson().fromJson(msgbody,new TypeToken<Vector<ClientArrangement>>(){}.getType());
+                    if( CourseAndScore.clientArrangementsTemp!=null&& CourseAndScore.clientArrangementsTemp.size()!=0){
+                        Vector<ClientArrangement> delete = new Vector<>();
+                        for(int i=0;i<CourseAndScore.clientArrangements.size();++i){
+                            if(CourseAndScore.clientArrangements.get(i).getGroupid()==groupid){
+                                delete.add(CourseAndScore.clientArrangements.get(i));
+                            }
+                        }
+
+
+                        for(int i=0;i<delete.size();++i){
+                            CourseAndScore.clientArrangements.remove(delete.get(i));
+                        }
+                        for(int i=0;i< CourseAndScore.clientArrangementsTemp.size();++i){
+//                        System.out.println(CourseAndScore.clientArrangementsTemp.get(i).getDaytime());
+                            CourseAndScore.clientArrangements.add(CourseAndScore.clientArrangementsTemp.get(i));
+                        }
+
+                        for(int i=0;i<CourseAndScore.clientArrangements.size();++i){
+                            if(CourseAndScore.clientArrangements.get(i).getGroupid()==CourseAndScore.duty_groupid){
+                                int schyear = CourseAndScore.clientArrangements.get(i).getYear();
+                                int  schmonth = CourseAndScore.clientArrangements.get(i).getMonth();
+                                int daytime = CourseAndScore.clientArrangements.get(i).getDaytime();
+//                    break;
+                            }
+                        }
+
+                        String type = "DutySche";
+                        Intent intent=new Intent("thefirstchange.example.com.communicationtext.SCHDUTY");
+                        intent.putExtra("type",type);
+                        intent.putExtra("groupid",groupid);
+
+                        sendCast(intent);
+                    }
+
+                }
+
+
+               //社团组织查看空课表
+            }else if(name.startsWith("searchEmptyCourseRs")){
+                if(name.split(" ").length<2) {
+                    return;
+                }
+                String msgbody2 = name.split(" ")[1];
+                int groupid = Integer.parseInt(msgbody2);
+                Vector<UserCorp> userCorps = new Gson().fromJson(msgbody, new TypeToken<Vector<UserCorp>>() {}.getType());
+
+
+
+                String rs = "ok";
+                if(userCorps!=null){
+                    MessageTemp.userCorps = userCorps;
+                }else{
+                    rs = "error";
+                }
+                String type = "SECP";
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.SEARCHEMPTYCOURSEPEOPLE");
+                intent.putExtra("type",type);
+                intent.putExtra("groupid",groupid);
+                intent.putExtra("rs",rs);
+                sendCast(intent);
+
+                //社团组织查看课表导入情况
+            }else if(name.startsWith("corpLoadCourseRs")){
+                if(name.split(" ").length<2) {
+                    return;
+                }
+                String msgbody2 = name.split(" ")[1];
+                int groupid = Integer.parseInt(msgbody2);
+                Vector<CorpUserNotLoadCourse> corpUserNotLoadCourses = new Gson().fromJson(msgbody, new TypeToken<Vector<CorpUserNotLoadCourse>>() {}.getType());
+
+                String rs = "ok";
+                if(corpUserNotLoadCourses!=null){
+                    MessageTemp.corpUserNotLoadCourses = corpUserNotLoadCourses;
+                }else{
+                    rs = "error";
+                }
+                String type = "corpLoadCourseRs";
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.GROUPARRANGEA");
+                intent.putExtra("type",type);
+                intent.putExtra("groupid",groupid);
+                intent.putExtra("rs",rs);
+                sendCast(intent);
+
+
+                //社团组织成员导入自己的课表
+            }else if(name.startsWith("loadCourseRs")) {
+
+                if (name.split(" ").length < 2) {
+                    return;
+                }
+                String msgbody2 = name.split(" ")[1];
+                JSONObject jsonObject = new JSONObject(msgbody2);
+                String rs = jsonObject.getString("rs");
+
+                String type = "getkBRs";
+                if (rs.equals("errUNOrPwd")) {
+                    Intent intent2 = new Intent("thefirstchange.example.com.communicationtext.CORPLOADSCOREACTIVITY");
+                    intent2.putExtra("type", type);
+                    intent2.putExtra("rs", rs);
+
+                    sendCast(intent2);
+                    return;
+                }
+                int xueqi = jsonObject.getInt("xueqi");
+                int grade = jsonObject.getInt("grade");
+
+                //存入数据库  并更新UI
+
+                Vector<Course> courses = new Gson().fromJson(msgbody, new TypeToken<Vector<Course>>() {
+                }.getType());
+
+//                for(int i=0;i<courses.size();++i) {
+//							 System.out.println(courses.get(i).getCN()+"   *********************");
+//						}
+
+                boolean iskong = true;      //判断是不是空值   也就是当前查询的成绩  教务处是否有
+                if (courses != null && courses.size() != 0) {
+                    iskong = false;
+                    CourseAndScore.courses = courses;
+                    CourseAndScore.courseGrade = grade;
+                    CourseAndScore.courseXueqi = xueqi;
+                }
+
+
+                if (!iskong) {
+
+
+                        }
+
+
+//                    Intent intent = new Intent("thefirstchange.example.com.communicationtext.CSS");
+//                    intent.putExtra("type", type);
+//                    sendCast(intent);
+
+
+                Intent intent2 = new Intent("thefirstchange.example.com.communicationtext.CORPLOADSCOREACTIVITY");
+                intent2.putExtra("type", type);
+                intent2.putExtra("rs", rs);
+                intent2.putExtra("iskong", iskong);
+
+                sendCast(intent2);
+
+                //社团组织群管理修改学年学期
+            }else if(name.startsWith("alterCorpTermRs")){
+
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("rs");
+                int gid = jsonObject.getInt("gid");
+                Intent intent2 = new Intent("thefirstchange.example.com.communicationtext.ALTERCORPTERM");
+                intent2.putExtra("type", "alterCorpTermRs");
+                intent2.putExtra("rs", rs);
+                intent2.putExtra("gid", gid);
+                if(rs.equals("ok")){
+                    int year = jsonObject.getInt("year");
+                    int xueqi = jsonObject.getInt("xueqi");
+                    int zhou = jsonObject.getInt("zhou");
+
+                    if(StaticAllList.groupList.containsKey(gid)){
+                        StaticAllList.groupList.get(gid).setYear(year);
+                        StaticAllList.groupList.get(gid).setXueqi(xueqi);
+                        StaticAllList.groupList.get(gid).setZhou(zhou);
+                    }
+
+                }
+                sendCast(intent2);
+
+                //添加社团组织的某一个部门
+            }else if(name.equals("addCorpPartRs")){
+
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("rs");      //结果
+                int gid = jsonObject.getInt("gid");
+                String partname = jsonObject.getString("name");
+
+                if(StaticAllList.groupList.containsKey(gid)){
+                    String partstring="";
+                    for(String part:StaticAllList.groupList.get(gid).getCorppart()){
+                        partstring+=part+" ";
+                    }
+                    partstring+=partname;
+                    partstring=partstring.trim();
+                    StaticAllList.groupList.get(gid).setCorppart(partstring.split(" "));
+
+                }
+
+                Intent intent2 = new Intent("thefirstchange.example.com.communicationtext.ADDALTERCORPPART");
+                intent2.putExtra("type", "addCorpPartRs");
+                intent2.putExtra("rs", rs);
+                intent2.putExtra("gid", gid);
+                sendCast(intent2);
+
+
+
+            }//删除社团组织的某一个部门
+            else if(name.equals("deleteCorpPartRs")){
+
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("rs");      //结果
+                int gid = jsonObject.getInt("gid");
+                String partname = jsonObject.getString("name");
+
+                if(StaticAllList.groupList.containsKey(gid)){
+                    String partstring="";
+                    for(String part:StaticAllList.groupList.get(gid).getCorppart()){
+                        if(!part.equals(partname)){
+                            partstring+=part+" ";
+                        }
+                    }
+                    partstring=partstring.trim();
+                    StaticAllList.groupList.get(gid).setCorppart(partstring.split(" "));
+                }
+
+                Intent intent2 = new Intent("thefirstchange.example.com.communicationtext.ADDALTERCORPPART");
+                intent2.putExtra("type", "deleteCorpPartRs");
+                intent2.putExtra("rs", rs);
+                intent2.putExtra("gid", gid);
+                sendCast(intent2);
+
+
+                //社团组织的执行者删除部门   那么该部门中的成员就要将自己的部室设置为空
+            }else if(name.equals("deleteCorpPart")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                int gid = jsonObject.getInt("gid");
+                String partname = jsonObject.getString("name");
+
+                if(StaticAllList.groupList.containsKey(gid)){
+                   UserGroup userGroup = StaticAllList.groupList.get(gid);
+                   if(userGroup.getPart().equals(partname)){
+                       StaticAllList.groupList.get(gid).setPart("");
+                   }
+
+                }
+
+            }
+
+            //修改社团组织的某一个部门的名字
+            else if(name.equals("alterCorpPartRs")){
+
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("rs");      //结果
+                int gid = jsonObject.getInt("gid");
+                String oldname = jsonObject.getString("oldname");
+                String newname = jsonObject.getString("newname");
+
+                if(StaticAllList.groupList.containsKey(gid)){
+                    String partstring="";
+                    for(String part:StaticAllList.groupList.get(gid).getCorppart()){
+                        if(part.equals(oldname)){
+                            partstring+=newname+" ";
+                        }else{
+                            partstring+=part+" ";
+                        }
+                    }
+                    partstring=partstring.trim();
+                    StaticAllList.groupList.get(gid).setCorppart(partstring.split(" "));
+                }
+
+                Intent intent2 = new Intent("thefirstchange.example.com.communicationtext.ADDALTERCORPPART");
+                intent2.putExtra("type", "alterCorpPartRs");
+                intent2.putExtra("rs", rs);
+                intent2.putExtra("gid", gid);
+                sendCast(intent2);
+
+
+            //社团组织的执行者修改部门   那么该部门中的成员就要将自己的部室设置
+            }else if(name.equals("alterCorpPart")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                int gid = jsonObject.getInt("gid");
+                String oldname = jsonObject.getString("oldname");
+                String newname = jsonObject.getString("newname");
+
+                if(StaticAllList.groupList.containsKey(gid)){
+                    UserGroup userGroup = StaticAllList.groupList.get(gid);
+                    if(userGroup.getPart().equals(oldname)){
+                        StaticAllList.groupList.get(gid).setPart(newname);
+                    }
+                }
+            }
+            //修改自己的部室的结果
+            else if(name.equals("upGroupPartRs")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("rs");      //结果
+                if(rs.equals("ok")){
+                    String groupid = jsonObject.getString("gid");
+                    String part = jsonObject.getString("part");
+                    StaticAllList.groupList.get(Integer.parseInt(groupid)).setPart(part);
+                }
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.ALTERGROUPPART");
+                intent.putExtra("rs",rs);
+                sendCast(intent);
+                //修改自己的部门职位的结果
+            }else if(name.equals("alterCorpPosRs")){
+                JSONObject jsonObject = new JSONObject(msgbody);
+                String rs = jsonObject.getString("rs");      //结果
+                if(rs.equals("ok")){
+                    String groupid = jsonObject.getString("gid");
+                    String pos = jsonObject.getString("pos");
+                    StaticAllList.groupList.get(Integer.parseInt(groupid)).setCorppos(pos);
+                }
+
+                Intent intent=new Intent("thefirstchange.example.com.communicationtext.ALTERCORPPOS");
+                intent.putExtra("rs",rs);
+                sendCast(intent);
+            }
+
+
+        }catch(Exception a) {
+            a.printStackTrace();
+        }
+
+    }
+
+    private void handle(int t, int i, int f) {
+        // TODO 实现自己的业务逻辑
+    }
+
+    public static class MainLookReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (!isLook){
+                isLook=true;
+            }else {
+                isLook=false;
+            }
+
+
+        }
+    }
+
+    public  static  void connect(){
+        if (!NettyClient.getInstance().getConnectStatus()) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    NettyClient.getInstance().connect(20000);//连接服务器
+
+                }
+            }).start();
+        }
+    }
+
+    public  static  void disconnect(){
+        if (NettyClient.getInstance().getConnectStatus()) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    NettyClient.getInstance().disconnect();//连接服务器
+                }
+            }).start();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
+        shutdown();
+        NettyClient.getInstance().setReconnectNum(0);
+        NettyClient.getInstance().disconnect();
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+
+    public class NetworkReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+            if (activeNetwork != null) { // connected to the internet
+                if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI
+                        || activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
+                    connect();
+                }
+            }
+        }
+    }
+
+    public void sendCast(Intent intent){
+        sendBroadcast(intent);
+    }
+
+
+
+}

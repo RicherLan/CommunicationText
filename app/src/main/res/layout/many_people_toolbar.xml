@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/manay_bar"
+    android:layout_height="45dp"
+    android:layout_width="match_parent"
+    android:background="@color/DeepSkyBlue1">
+    <ImageView
+        android:id="@+id/many_people_back_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:scaleType="center"
+        android:src="@drawable/ic_back_gray"
+        android:layout_centerVertical="true"/>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+
+        <TextView
+            android:id="@+id/many_peopel_toolbar_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center"
+            android:layout_marginStart="131dp"
+            android:text="小兰"
+            android:textColor="#fff"
+            android:textSize="21dp" />
+
+        <ImageView
+            android:id="@+id/go_all_people"
+            android:layout_width="@dimen/dimens_35px"
+            android:layout_height="@dimen/dimens_35px"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="10dp"
+            android:scaleType="center"
+            android:src="@drawable/ic_many_people" />
+
+    </RelativeLayout>
+
+</android.support.v7.widget.Toolbar>

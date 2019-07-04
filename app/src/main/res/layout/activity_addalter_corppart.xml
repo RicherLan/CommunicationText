@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white">
+    <RelativeLayout
+        android:background="@color/DeepSkyBlue1"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dimens_45px">
+        <ImageView
+            android:id="@+id/finish_addalter_corppart_iv"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="10dp"
+            android:src="@drawable/ic_back_gray"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:text="部室管理"
+            android:textColor="@color/white"
+            android:textSize="22sp"
+            android:layout_centerHorizontal="true"/>
+
+        <TextView
+            android:id="@+id/addalter_add_corppart_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="10dp"
+            android:gravity="center_vertical"
+            android:text="添加"
+            android:textColor="@color/white"
+            android:textSize="21sp"
+            android:layout_centerHorizontal="true"/>
+    </RelativeLayout>
+
+
+
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/addalter_corppart_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="15dp">
+
+    </android.support.v7.widget.RecyclerView>
+
+
+</LinearLayout>

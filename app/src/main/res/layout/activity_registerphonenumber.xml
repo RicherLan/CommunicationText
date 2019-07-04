@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/beautifulbackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:orientation="horizontal"
+        android:background="@color/DeepSkyBlue1"
+
+        >
+
+        <ImageView
+            android:id="@+id/registerphonenumberback_tv"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.9"
+            android:paddingTop="5dp"
+            android:src="@drawable/ic_back_gray"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="4"
+            android:gravity="center"
+            android:text="手机号注册"
+            android:textSize="21sp"
+            android:textColor="@color/white"
+            />
+        <TextView
+        android:id="@+id/registerphonenumbernext_tv"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.9"
+        android:layout_marginRight="10dp"
+        android:gravity="center"
+        android:text="确认"
+        android:textSize="18sp"
+        android:textColor="@color/white"
+        />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_marginTop="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:orientation="vertical"
+        android:background="@color/beautifulbackground"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp">
+
+        <EditText
+            android:id="@+id/registerphonenumberphone_et"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:drawableLeft="@drawable/phone"
+            android:drawablePadding="5dp"
+            android:hint="请输入电话号码"
+            android:textCursorDrawable="@drawable/shape_et_cursor_color"
+            android:singleLine="true"
+            android:textColorHint="@color/beautifulbackground"
+            android:textColor="@color/Seashell4"
+            android:background="@drawable/edittextcorner"
+            />
+
+        <EditText
+            android:id="@+id/registerphonenumberpassword_et"
+            android:layout_marginTop="5dp"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:drawableLeft="@drawable/password"
+            android:drawablePadding="5dp"
+            android:hint="请输入密码"
+            android:textCursorDrawable="@drawable/shape_et_cursor_color"
+            android:singleLine="true"
+            android:textColorHint="@color/beautifulbackground"
+            android:textColor="@color/Seashell4"
+            android:background="@drawable/edittextcorner"
+            android:inputType="textPassword"
+            />
+
+
+        
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/shape_corner_white">
+
+        <TextView
+            android:paddingLeft="10dp"
+            android:gravity="center_vertical"
+            android:id="@+id/registerphonenumberschoolname_tv"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:textSize="15sp"
+            android:textColor="@color/Seashell4"
+            android:background="@null"
+
+            />
+
+        <TextView
+            android:paddingLeft="10dp"
+            android:gravity="center_vertical"
+            android:id="@+id/registerphonenumbercollegename_tv"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:textSize="15sp"
+            android:textColor="@color/Seashell4"
+            android:background="@null"
+
+            />
+
+        <TextView
+            android:paddingLeft="10dp"
+            android:gravity="center_vertical"
+            android:id="@+id/registerphonenumbermajorname_tv"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:textSize="15sp"
+            android:textColor="@color/Seashell4"
+            android:background="@null"
+
+            />
+
+    </LinearLayout>
+   
+
+</LinearLayout>
